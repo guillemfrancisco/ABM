@@ -1,0 +1,117 @@
+{
+	"clusters": [
+	
+		{
+		    "id":0,
+			"name": "Andorran",
+			"type":"PERSON",
+			"amount": 500,
+			"profile": {
+				"nationality": "ANDORRAN",
+				"languages": ["CA","ES","FR"],
+				"spending": {
+					"restoration": [10,30],
+					"culture": [10,20],
+					"leisure": [40,50],
+					"accommodation": [40,60],
+					"shopping": [30,50]
+				},
+				"schedule": {
+					"lunch": [14,16],
+					"dinner": [21,24],
+					"nightlife": [1,5],
+					"sleep": [1,8]
+				}
+			},
+			"style": {
+				"color": "#B0B6B7",
+				"size": 3
+			}
+		},
+		
+		{
+		    "id":1,
+			"name": "Spanish",
+			"type":"PERSON",
+			"amount": 500,
+			"profile": {
+				"nationality": "SPANISH",
+				"languages": ["ES","CA"],
+				"spending": {
+					"restoration": [10,30],
+					"culture": [10,20],
+					"leisure": [40,50],
+					"accommodation": [40,60],
+					"shopping": [30,50]
+				},
+				"schedule": {
+					"lunch": [14,16],
+					"dinner": [21,24],
+					"nightlife": [1,5],
+					"sleep": [1,8]
+				}
+			},
+			"style": {
+				"color": "#269A8D",
+				"size": 3
+			}
+		}, 
+		
+		{
+		    "id":2,
+			"name": "French",
+			"type":"PERSON",
+			"amount": 300,
+			"profile": {
+				"nationality": "FRENCH",
+				"languages": ["FR"],
+				"spending": {
+					"restoration": [20,40],
+					"culture": [30,40],
+					"leisure": [10,20],
+					"accommodation": [30,50],
+					"shopping": [30,50]
+				},
+				"schedule": {
+					"lunch": [12,14],
+					"dinner": [19,21],
+					"nightlife": [22,1],
+					"sleep": [23,7]
+				}
+			},
+			"style": {
+				"color": "#80D8EF",
+				"size": 3
+			}
+		},
+		
+		{
+		    "id":3,
+			"name": "British",
+			"type":"PERSON",
+			"amount": 100,
+			"profile": {
+				"nationality": "BRITISH",
+				"languages": ["EN"],
+				"spending": {
+					"restoration": [20,40],
+					"culture": [30,40],
+					"leisure": [10,20],
+					"accommodation": [30,50],
+					"shopping": [30,50]
+				},
+				"schedule": {
+					"lunch": [12,14],
+					"dinner": [19,21],
+					"nightlife": [22,1],
+					"sleep": [23,7]
+				}
+			},
+			"style": {
+				"color": "#FA5F88",
+				"size": 3
+			}
+		}
+		
+	]
+}
