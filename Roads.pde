@@ -15,6 +15,12 @@ public class Roads {
         JSONArray streets = roadNetwork.getJSONArray("features");
         for(int i = 0; i < streets.size(); i++) {
             JSONObject street = streets.getJSONObject(i);
+            
+            JSONObject props = street.getJSONObject("properties");
+            String type = props.isNull("type") ? "null" : props.getString("type");
+            String name = props.isNull("name") ? "null" : props.getString("name");
+            //boolean oneWay = props.isNull("oneway") ? false : props.getBoolean("oneway");
+      
             JSONArray points = street.getJSONObject("geometry").getJSONArray("coordinates");
             
             Node prevNode = null;
@@ -23,13 +29,13 @@ public class Roads {
             for(int j = 0; j < points.size(); j++) {
             
                 PVector point = toXY(points.getJSONArray(j).getFloat(1), points.getJSONArray(j).getFloat(0));
-                
+                    
                 Node node = null;
                 for(Node n : nodes) {
                     node = n.find( new Node(point) );
                     if(node != null) {
                         if(prevNode != null) {
-                            prevNode.connect(node, vertex);
+                            prevNode.connectBoth(node, vertex, name);
                             vertex = new ArrayList();
                         }
                         prevNode = node;
@@ -41,7 +47,7 @@ public class Roads {
                 if(node == null) {
                     if(j == 0 || j == points.size() - 1) { // Is first or last point is a node
                         node = new Node(point);
-                        if(prevNode != null) prevNode.connect(node, vertex);
+                        if(prevNode != null) prevNode.connectBoth(node, vertex, name);
                         prevNode = node;
                     } else vertex.add(point);
                 }
@@ -51,7 +57,7 @@ public class Roads {
                     node.setID( nodes.size() );
                     nodes.add(node);
                 }
-             
+                
             }
             
         }
@@ -152,7 +158,7 @@ public class Roads {
             }
         }
         
-        connectionNode.connectBoth(poi, null);
+        connectionNode.connectBoth(poi, null, "POI access");
         
         if(connectionNode.getID() == -1) {
             connectionNode.setID( nodes.size() );
@@ -226,9 +232,9 @@ private class Node implements Placeable {
     
     // Pathfinding variables
     private Node parent;
-    private Float f;
-    private Float g;
-    private Float h;
+    private float f;
+    private float g;
+    private float h;
     
     public Node(PVector pos) {
         this.id = -1;
@@ -253,14 +259,26 @@ private class Node implements Placeable {
     }
     
     public Street streetTo(Node node) {
-        ArrayList<Street> streets = new ArrayList();
+        /*  GIVES ERROR
+        ArrayList<Street> streetsToNode = new ArrayList();
         for(Street street : outboundStreets()) {
-            print("["+ id +" -> "+ street.getNode().id +"]");
-            if(street.getNode().equals(node)) streets.add(street);
+            if(street.getNode().equals(node)) streetsToNode.add(street);
         }
-        Collections.sort(streets, LENGTH);
+        Collections.sort(streetsToNode, LENGTH);
         println("");
-        return streets.size() == 0 ? null : streets.get(0);
+        return streetsToNode.size() == 0 ? null : streetsToNode.get(0);
+        */
+        
+        float minDist = Float.MAX_VALUE;
+        Street shortest = null;
+        for(Street street : outboundStreets()) {
+            if( node.equals(street.getNode() ) && street.getLength() < minDist) {
+                minDist = street.getLength();
+                shortest = street;
+            }
+        }
+        return shortest;
+        
     }
     
     public ArrayList<Node> getNeighbors() {
@@ -280,29 +298,29 @@ private class Node implements Placeable {
     /* PATHFINDING METHODS */
     public void setParent(Node parent) { this.parent = parent; }
     public Node getParent() { return parent; }
-    public void setG(Float cost) { g = cost; }
-    public Float getG() { return g; }
+    public void setG(float cost) { g = cost; }
+    public float getG() { return g; }
     public void setF(Node destination) {
         h =  pos.dist(destination.getPosition());
         f = g + h;
     }
-    public Float getF() { return f; }
-    public Float getH() { return h; }
+    public float getF() { return f; }
+    public float getH() { return h; }
     public void reset() {
         parent = null;
         f = g = h = 0.0;
     }
     
     
-    protected void connect(Node node, ArrayList<PVector> vertices) {
-        streets.add( new Street(this, node, vertices) );
+    protected void connect(Node node, ArrayList<PVector> vertices, String name) {
+        streets.add( new Street(name, this, node, vertices) );
     }
     
     
-    protected void connectBoth(Node node, ArrayList<PVector> vertices) {
-        connect(node, vertices);
+    protected void connectBoth(Node node, ArrayList<PVector> vertices, String name) {
+        connect(node, vertices, name);
         if(vertices != null) Collections.reverse(vertices);
-        node.connect(this, vertices);
+        node.connect(this, vertices, name);
     }
     
     
@@ -311,9 +329,10 @@ private class Node implements Placeable {
         for(Street street : outboundStreets()) {
             if( street.getNode().getPosition().equals(node.getPosition()) ) return street.getNode();
             else {
-                Node last = street.getNode();
+                Street streetBack = street.getNode().streetTo(this);
                 Node newNode = street.split(node);
                 if(newNode != null) {
+                    if(streetBack != null) newNode = streetBack.split(newNode);
                     //Street streetBack = last.streetTo(this);
                     //if(streetBack != null) newNode = streetBack.split(newNode);
                     return newNode;
@@ -349,6 +368,8 @@ private class Node implements Placeable {
 
 private class Street implements Comparable<Street> {
     
+    private String name;
+    
     private Node fromNode;
     private Node toNode;
     private float length = 0;
@@ -358,7 +379,8 @@ private class Street implements Comparable<Street> {
     private ArrayList<Agent> crowd = new ArrayList();
     
     
-    public Street(Node fromNode, Node toNode, ArrayList<PVector> vertices) {
+    public Street(String name, Node fromNode, Node toNode, ArrayList<PVector> vertices) {
+        this.name = name;
         this.fromNode = fromNode;
         this.toNode = toNode;
         this.vertices.add(fromNode.getPosition());
@@ -378,7 +400,7 @@ private class Street implements Comparable<Street> {
         if(i >= 0  && i < vertices.size()) return vertices.get(i).copy();
         return null;
     }
-    public Float getLength() { return length; }
+    public float getLength() { return length; }
     public boolean isOpen() { return open; }
    
     
@@ -399,9 +421,20 @@ private class Street implements Comparable<Street> {
     protected Node split(Node node) {
         for(int i = 0; i < vertices.size(); i++) {
             if( vertices.get(i).equals(node.getPosition()) ) {
-                node.connect(toNode, new ArrayList( vertices.subList(i, vertices.size()) ));
-                vertices = new ArrayList( vertices.subList(0, i) );
-                length -= node.streetTo(toNode).getLength();  // REVISAR!!!!
+                
+               // println( name + " " + (i + 1) + " -> " + (vertices.size() - 2) + "["+ vertices.size() +"]" );
+                
+                ArrayList<PVector> splittedVertices = i >= vertices.size()-2 ? new ArrayList() : new ArrayList(vertices.subList(i + 1, vertices.size()-1));
+                //println(splittedVertices.size());
+                
+                node.connect(toNode, splittedVertices, name);
+                vertices = new ArrayList( vertices.subList(0, i + 1) );
+                
+                length = 0;
+                for(int j = 1; j < this.vertices.size(); j++) {
+                    length += this.vertices.get(i-1).dist( this.vertices.get(i) );
+                }
+                
                 toNode = node;
                 return node;
             }
@@ -433,7 +466,9 @@ private class Street implements Comparable<Street> {
     
     @Override
     public int compareTo(Street s) {
-        return getLength().compareTo(s.getLength());
+        if(getLength() < s.getLength()) return - 1;
+        else if(getLength() > s.getLength()) return 1;
+        else return 0;
     }
     
 }
@@ -441,7 +476,9 @@ private class Street implements Comparable<Street> {
 
 static final Comparator<Street> LENGTH = new Comparator<Street>() {
     public int compare(Street s1, Street s2) {
-        return s1.getLength().compareTo(s2.getLength());
+        if(s1.getLength() < s2.getLength()) return - 1;
+        else if(s1.getLength() > s2.getLength()) return 1;
+        else return 0;
     }
 };
 

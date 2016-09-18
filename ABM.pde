@@ -26,7 +26,7 @@ void setup() {
     roads = new Roads("json/roads_massive_simplified.geojson");
     //poi = new POI(roads.toXY(42.499123, 1.538010), "Test", 30);
     //roads.addPOI( poi );
-    //agents = loadJSONAgents("json/clusters.json", roads);
+    agents = loadJSONAgents("json/clusters.json", roads);
     
     heatmap = new Heatmap(0, 0, width, height);
     heatmap.setBrush("img/brush_80x80.png", 80);
@@ -67,7 +67,7 @@ void draw() {
     line(mouseX, mouseY, point.x, point.y);
     */
     
-    
+    /*
     Node endNode = roads.closestNode( new PVector(mouseX, mouseY) );
     PVector endPos = endNode.getPosition();
     PVector initPos = initNode.getPosition();
@@ -84,6 +84,7 @@ void draw() {
     
     textAlign(LEFT, BOTTOM); fill(#550000);
     text( roads.toMeters( mousePath.getLength() ), endPos.x, endPos.y - 5);
+    */
     
     /*
     stroke(#FF0000);

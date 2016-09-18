@@ -38,25 +38,14 @@ public class Path {
             if( street.isLast( vertex ) ) nextStreet();
             else toVertex++;
             return dir;
-            
-            /*
-            toStreetPoint++;
-            if( toStreetPoint >= inStreet.size() ) nextStreet();
-            return dir;
-            */
         }
     }
     
     
     public void draw(int stroke, color c) {
-        for(Street edge : streets) edge.draw(stroke, c);
-        /*
-        if( available() ) {
-            PVector lastPos = edges.get( edges.size()-1 ).getNode().getPosition();
-            textAlign(CENTER, BOTTOM); fill(c);
-            text(length, lastPos.x, lastPos.y - 5);
+        for(Street street : streets) {
+            street.draw(stroke, c);
         }
-        */
     }
 
 
@@ -91,20 +80,13 @@ public class Path {
     
     
     public ArrayList aStar(ArrayList<Node> nodes, Node origin, Node destination) {
-
         ArrayList<Node> path = new ArrayList(); 
-        
         if(origin != destination) {
-            
             for(Node node : nodes) node.reset();
-            
             ArrayList<Node> open = new ArrayList();
             ArrayList<Node> closed = new ArrayList();
-            
             open.add(origin);
-            
             while(open.size() > 0) {
-                
                 float lowestF = Float.MAX_VALUE;
                 Node currentNode = null;
                 for(Node node : open) {
@@ -113,17 +95,12 @@ public class Path {
                         currentNode = node;
                     }
                 }
-                
                 open.remove(currentNode);
                 closed.add(currentNode);
-                
                 if(currentNode == destination) break;
-                
                 for(Street street : currentNode.outboundStreets()) {
                     Node neighbor = street.getNode();
-                    
                     if( !street.isOpen() || closed.contains(neighbor)) continue;
-                    
                     boolean neighborOpen = open.contains(neighbor);
                     float costToNeighbor = currentNode.getG() + street.getLength();
                     if( costToNeighbor < neighbor.getG() || !neighborOpen ) {
@@ -133,12 +110,9 @@ public class Path {
                         if(!neighborOpen) open.add(neighbor);
                     }
                 }
-                
             }
-            
             path = retracePath(destination);
         }
-        
         return path;
     }
     
