@@ -95,6 +95,7 @@ public class Heatmap {
     public void draw() {
         if(heatmap != null && visible) {
             image(heatmap, position.x, position.y);
+            //blend(heatmap, 0, 0, width, height, 0, 0, width, height, BLEND);
             fill(#FFFFFF); noStroke(); textSize(10); textAlign(LEFT,BOTTOM);
             text(title, width - 135, height - 60);
             rect(width - 136, height - 56, 102, 22);

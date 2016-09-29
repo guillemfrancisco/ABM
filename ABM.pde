@@ -1,6 +1,8 @@
 PFont myFont;
 
 Roads roads;
+
+AgentFactory af;
 ArrayList<Agent> agents = new ArrayList();
 
 Heatmap heatmap;
@@ -9,9 +11,6 @@ Path mousePath;
 
 boolean run = false;
 float speed = 0.5;
-
-
-Node initNode = null;
 
 
 POI poi;
@@ -26,7 +25,8 @@ void setup() {
     roads = new Roads("json/roads_massive_simplified.geojson");
     //poi = new POI(roads.toXY(42.499123, 1.538010), "Test", 30);
     //roads.addPOI( poi );
-    agents = loadJSONAgents("json/clusters.json", roads);
+    af = new AgentFactory();
+    agents = af.loadFromJSON("json/clusters.json", roads);
     
     heatmap = new Heatmap(0, 0, width, height);
     heatmap.setBrush("img/brush_80x80.png", 80);
@@ -34,24 +34,19 @@ void setup() {
     
     mousePath = new Path();
     
-    initNode = roads.randomNode();
-    
 }
 
 
 void draw() {
     
     background(255);
-    //background(#252627);
     
     roads.draw(1, #F0F3F5);
-    //roads.draw(1, #333638);
     
     for(Agent agent : agents) {
         if(run) agent.move(speed);
         agent.draw();
     }
-    
     
     /*
     Edge street = roads.closestStreet( new PVector(mouseX, mouseY) );
@@ -96,9 +91,10 @@ void draw() {
     
     heatmap.draw();
     
-    fill(0); //fill(255);
-    textFont(myFont); textSize(12); textAlign(LEFT, TOP);
-    text(frameRate + "\nAgents: " + agents.size() + "\nSpeed: " + (run ? speed : "[PAUSED]"), 20, 20);
+    fill(0);
+    textFont(myFont); textSize(12); textAlign(LEFT, TOP); textLeading(15);
+    text(frameRate + "\nAgents: " + agents.size() + "\nSpeed: " + (run ? round(speed*10) : "[PAUSED]"), 20, 20);
+    
     
 }
 
@@ -138,8 +134,5 @@ void mouseClicked() {
     for(Agent agent : agents) {
         agent.select();
     }
-    
-    initNode = roads.closestNode( new PVector(mouseX, mouseY) );
-    println(initNode.toString());
     
 }

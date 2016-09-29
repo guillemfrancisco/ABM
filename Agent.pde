@@ -3,20 +3,20 @@ public interface Placeable {
 }
 
 
-public class Agent implements Placeable {
+public abstract class Agent implements Placeable {
 
-    private int id;
-    private Roads map = null;
-    private boolean selected = false;
+    protected int id;
+    protected Roads map = null;
+    protected boolean selected = false;
     
-    private PVector pos = new PVector();
-    private Node inNode = null,
+    protected PVector pos = new PVector();
+    protected Node inNode = null,
                  toNode = null;
-    private float distTraveled = 0;
-    private Path path = new Path();
+    protected float distTraveled = 0;
+    protected Path path = new Path();
     
-    private int dotSize;
-    private color tint;
+    protected int size;
+    protected color tint;
     
     public Agent(int id, Roads map) {
         this.id = id;
@@ -29,14 +29,18 @@ public class Agent implements Placeable {
     }
     
     
-    public void setStyle(int dotSize, String tint) {
-        this.dotSize = dotSize;
+    public void setStyle(int size, String tint) {
+        this.size = size;
         this.tint = unhex( "FF" + tint.substring(1) );
     }
     
     
     public PVector getPosition() {
         return pos.copy();
+    }
+    
+    public boolean isSelected() {
+        return selected;
     }
     
     public Node findDestination() {
@@ -71,21 +75,53 @@ public class Agent implements Placeable {
             path.draw(1, tint);
             
             textAlign(LEFT, CENTER); textSize(9);
-            text( (int) distTraveled + "m", pos.x + 2 * dotSize, pos.y);
+            text( (int) distTraveled + "m", pos.x + 2 * size, pos.y);
             
             fill(tint, 75); noStroke();
-            ellipse(pos.x, pos.y, 4 * dotSize, 4 * dotSize);
+            ellipse(pos.x, pos.y, 4 * size, 4 * size);
             
         }
-        fill(tint); noStroke();
-        ellipse(pos.x, pos.y, dotSize, dotSize);
+        
+        drawShape();
 
     }
-    
+
+    protected abstract void drawShape();
     
     public boolean select() {
-        selected = dist(mouseX, mouseY, pos.x, pos.y) < dotSize;
+        selected = dist(mouseX, mouseY, pos.x, pos.y) < size;
         return selected;
     }
 
+}
+
+
+
+public class Person extends Agent {
+
+    Person(int id, Roads map) {
+        super(id, map);
+    }
+    
+    
+    protected void drawShape() {
+        fill(tint); noStroke();
+        ellipse(pos.x, pos.y, size, size);
+        text(toNode.id, pos.x, pos.y);
+    }
+    
+}
+
+
+public class Car extends Agent {
+    
+    Car(int id, Roads map) {
+        super(id, map);
+    }
+    
+    protected void drawShape() {
+        fill(tint); noStroke(); rectMode(CENTER);
+        rect(pos.x, pos.y, size, size);
+    }
+    
 }

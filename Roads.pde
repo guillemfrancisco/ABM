@@ -24,8 +24,7 @@ public class Roads {
             JSONArray points = street.getJSONObject("geometry").getJSONArray("coordinates");
             
             Node prevNode = null;
-            ArrayList vertex = new ArrayList();
-            
+            ArrayList vertices = new ArrayList();
             for(int j = 0; j < points.size(); j++) {
             
                 PVector point = toXY(points.getJSONArray(j).getFloat(1), points.getJSONArray(j).getFloat(0));
@@ -35,8 +34,8 @@ public class Roads {
                     node = n.find( new Node(point) );
                     if(node != null) {
                         if(prevNode != null) {
-                            prevNode.connectBoth(node, vertex, name);
-                            vertex = new ArrayList();
+                            prevNode.connectBoth(node, vertices, name);
+                            vertices = new ArrayList();
                         }
                         prevNode = node;
                         break;
@@ -47,9 +46,9 @@ public class Roads {
                 if(node == null) {
                     if(j == 0 || j == points.size() - 1) { // Is first or last point is a node
                         node = new Node(point);
-                        if(prevNode != null) prevNode.connectBoth(node, vertex, name);
+                        if(prevNode != null) prevNode.connectBoth(node, vertices, name);
                         prevNode = node;
-                    } else vertex.add(point);
+                    } else vertices.add(point);
                 }
                 
                 // Save node if NEW (not registered)
@@ -59,9 +58,7 @@ public class Roads {
                 }
                 
             }
-            
         }
-        
     }
 
 
