@@ -1,14 +1,16 @@
+public enum Visibility { HIDE, SHOW, TOGGLE; }
+
 public class Heatmap {
-  
+    
     private String title = "TITLE";
     private PVector position;
     private int width,
                 height;
     
     private PImage heatmap,
-                   //gradientMap,
-                   heatmapBrush,
-                   heatmapColors;
+                   heatmapBrush;
+    private HashMap<String, PImage> gradients = new HashMap<String, PImage>();               
+                   
     private float maxValue = 0;
     private boolean visible = false;
   
@@ -16,6 +18,14 @@ public class Heatmap {
         this.position = new PVector(x, y);
         this.width = width;
         this.height = height;
+        
+        // Default B/W gradient
+        PImage defaultGrad = createImage(255, 1, RGB);
+        defaultGrad.loadPixels();
+        for(int i = 0; i < defaultGrad.pixels.length; i++) defaultGrad.pixels[i] = color(i, i, i); 
+        defaultGrad.updatePixels();
+        gradients.put("default", defaultGrad);
+        
     }
     
     
@@ -25,17 +35,23 @@ public class Heatmap {
     }
     
     
-    public void setGradient(String gradient) {
-        heatmapColors = loadImage(gradient);
+    public void addGradient(String name, String path) {
+        File file = new File(dataPath(path));
+        if( file.exists() ) gradients.put(name, loadImage(path));
     }
   
-    public void setVisibility(boolean v) {
-        visible = v;
-    }
-    
-    
-    public void toggleVisibility() {
-        visible = !visible;
+    public void visible(Visibility v) {
+        switch(v) {
+            case HIDE:
+                visible = false;
+                break;
+            case SHOW:
+                visible = true;
+                break;
+            case TOGGLE:
+                visible = !visible;
+                break;
+        }
     }
     
     
@@ -45,6 +61,11 @@ public class Heatmap {
   
   
     public void update(String title, ArrayList objects) {
+        update(title, objects, "default");
+    }
+    
+    
+    public void update(String title, ArrayList objects, String gradient) {
         this.title = title;
         if(visible) {
             PImage gradientMap = createImage(width, height, ARGB);
@@ -54,7 +75,8 @@ public class Heatmap {
                 PVector position = obj.getPosition();
                 gradientMap = addGradientPoint(gradientMap, position.x, position.y);
             }
-            heatmap = colorize(gradientMap);
+            PImage gradientColors = gradients.containsKey(gradient) ? gradients.get(gradient) : gradients.get("default");
+            heatmap = colorize(gradientMap, gradientColors);
             gradientMap.updatePixels();
         }
     }
@@ -80,7 +102,7 @@ public class Heatmap {
     }
   
   
-    public PImage colorize(PImage gradientMap) {
+    public PImage colorize(PImage gradientMap, PImage heatmapColors) {
         PImage heatmap = createImage(width, height, ARGB);
         heatmap.loadPixels();
         for(int i=0; i< gradientMap.pixels.length; i++) {
@@ -93,13 +115,16 @@ public class Heatmap {
   
   
     public void draw() {
-        if(heatmap != null && visible) {
+        if(visible && heatmap != null) {
+            pushStyle();
+            blendMode(MULTIPLY);
             image(heatmap, position.x, position.y);
-            //blend(heatmap, 0, 0, width, height, 0, 0, width, height, BLEND);
-            fill(#FFFFFF); noStroke(); textSize(10); textAlign(LEFT,BOTTOM);
-            text(title, width - 135, height - 60);
-            rect(width - 136, height - 56, 102, 22);
-            image(heatmapColors, width - 135, height - 55, 100, 20);
+            popStyle();
+            // Legend
+            //fill(#FFFFFF); noStroke(); textSize(10); textAlign(LEFT,BOTTOM);
+            //text(title, width - 135, height - 60);
+            //rect(width - 136, height - 56, 102, 22);
+            //image(heatmapColors, width - 135, height - 55, 100, 20);
         }
     }  
   

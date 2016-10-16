@@ -1,9 +1,9 @@
 PFont myFont;
 
-Roads roads;
+PImage BG;
 
-AgentFactory af;
-ArrayList<Agent> agents = new ArrayList();
+Roads roads;
+Agents agents;
 
 Heatmap heatmap;
 
@@ -12,25 +12,29 @@ Path mousePath;
 boolean run = false;
 float speed = 0.5;
 
-
 POI poi;
 
 void setup() {
     
-    size(1200, 700, P2D);
-    pixelDensity(2);
+    //size(1200, 700, P2D);
+    fullScreen(P2D);
+    pixelDensity(2); // Reduce fps to half
     
     myFont = createFont("Montserrat-Light", 32);
+    BG = loadImage("img/bg/wireframe.jpg");
+    BG.resize(width, height);
     
     roads = new Roads("json/roads_massive_simplified.geojson");
     //poi = new POI(roads.toXY(42.499123, 1.538010), "Test", 30);
     //roads.addPOI( poi );
-    af = new AgentFactory();
-    agents = af.loadFromJSON("json/clusters.json", roads);
+    
+    agents = new Agents(this, roads);
+    agents.loadFromJSON("json/clusters.json");
     
     heatmap = new Heatmap(0, 0, width, height);
-    heatmap.setBrush("img/brush_80x80.png", 80);
-    heatmap.setGradient("img/gradient_tri.png");
+    heatmap.setBrush("img/heatmap/brush_80x80.png", 80);
+    heatmap.addGradient("heat", "img/heatmap/heat.png");
+    heatmap.addGradient("cool", "img/heatmap/cool.png");
     
     mousePath = new Path();
     
@@ -41,12 +45,12 @@ void draw() {
     
     background(255);
     
+    image(BG, 0, 0);
+    
     roads.draw(1, #F0F3F5);
     
-    for(Agent agent : agents) {
-        if(run) agent.move(speed);
-        agent.draw();
-    }
+    if(run) agents.move(speed);
+    agents.draw();
     
     /*
     Edge street = roads.closestStreet( new PVector(mouseX, mouseY) );
@@ -92,8 +96,10 @@ void draw() {
     heatmap.draw();
     
     fill(0);
-    textFont(myFont); textSize(12); textAlign(LEFT, TOP); textLeading(15);
-    text(frameRate + "\nAgents: " + agents.size() + "\nSpeed: " + (run ? round(speed*10) : "[PAUSED]"), 20, 20);
+    textFont(myFont); textSize(10); textAlign(LEFT, TOP); textLeading(15);
+    text("Agents: " + agents.count() + "\nSpeed: " + (run ? round(speed*10) : "[PAUSED]") + "\nFramerate: " + round(frameRate) + "fps", 20, 20);
+    
+    agents.printLegend(20, 70);
     
     
 }
@@ -115,14 +121,14 @@ void keyPressed() {
             break;
             
         case 'h':
-            heatmap.toggleVisibility();
-            heatmap.update("Agents Density", agents);
+            heatmap.visible(Visibility.TOGGLE);
+            heatmap.update("Agents Density", agents.getAgents(), "heat");
             run = !heatmap.isVisible();
             break;
             
         case 'p':
-            heatmap.toggleVisibility();
-            heatmap.update("Nodes Density", roads.getNodes());
+            heatmap.visible(Visibility.TOGGLE);
+            heatmap.update("Nodes Density", roads.getNodes(), "cool");
             break;
     }
     
@@ -131,8 +137,6 @@ void keyPressed() {
 
 void mouseClicked() {
     
-    for(Agent agent : agents) {
-        agent.select();
-    }
+    agents.select(mouseX, mouseY);
     
 }
