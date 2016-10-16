@@ -1,62 +1,17 @@
-public interface Placeable {
-    public PVector getPosition();
-}
-
-
-
 // AGENTS FACADE --------------->
-public class Agents {
-
-    private final PApplet PAPPLET;
-    private final Roads ROADMAP;
-    private final AgentFabric FABRIC = new AgentFabric();
-    private ArrayList<Agent> agents = new ArrayList();
-    
+public class Agents extends Facade {
     
     public Agents(PApplet papplet, Roads roads) {
-        PAPPLET = papplet;
-        ROADMAP = roads;
-    }
-    
-    
-    public int count() {
-        return agents.size();
-    }
-    
-    
-    public ArrayList<Agent> getAgents() {
-        return agents;
-    }
-    
-    
-    public void loadFromJSON(String pathJSON) {
-        File file = new File(dataPath(pathJSON));
-        if( !file.exists() ) println("ERROR! JSON file does not exist");
-        else agents.addAll( FABRIC.loadFromJSON(file, ROADMAP) );
-    
-    }
-    
-    
-    public void move(float speed) {
-        for(Agent agent : agents) agent.move(speed);
-    }
-    
-    
-    public void draw() {
-        for(Agent agent : agents) agent.draw();
+        super(papplet, roads);
+        fabric = new AgentFabric();
     }
 
     
-    public void select(int mouseX, int mouseY) {
-        for(Agent agent : agents) agent.select(mouseX, mouseY);
-    }
-    
-    
-    public void printLegend(int x, int y) {
-        String txt = "";
-        IntDict counter = FABRIC.getCounter();
-        for(String name : counter.keyArray()) txt += name + ": " + counter.get(name) + " agents\n";
-        text(txt, x, y);
+    public void move(float speed) {
+        for(MapItem item : items) {
+            Agent agent = (Agent) item;
+            agent.move(speed);
+        }
     }
 
 }
@@ -64,16 +19,8 @@ public class Agents {
 
 
 // AGENTS FABRIC --------------->
-private class AgentFabric {
+private class AgentFabric extends Fabric {
 
-    IntDict counter = new IntDict();
-    
-    
-    public IntDict getCounter() {
-        return counter;
-    }
-    
-    
     public ArrayList<Agent> loadFromJSON(File JSONFile, Roads roads) {
 
         ArrayList<Agent> agents = new ArrayList();
@@ -109,15 +56,16 @@ private class AgentFabric {
         return agents;
     }
     
+    
+    public ArrayList<Agent> loadFromCSV(String pathCSV, Roads roadmap) {
+        return null;
+    }
+    
 }
 
 
-
-
-
-
-
-public abstract class Agent implements Placeable {
+// AGENTS CLASS ----------------->
+public abstract class Agent implements MapItem, Placeable {
 
     public final int ID;
     protected final Roads ROADMAP;
@@ -177,9 +125,8 @@ public abstract class Agent implements Placeable {
     }
     
     
-    public boolean select(int mouseX, int mouseY) {
+    public void select(int mouseX, int mouseY) {
         selected = dist(mouseX, mouseY, pos.x, pos.y) < SIZE;
-        return selected;
     }
     
     

@@ -3,7 +3,9 @@ PFont myFont;
 PImage BG;
 
 Roads roads;
+
 Agents agents;
+PointsOfInterest pois;
 
 Heatmap heatmap;
 
@@ -25,8 +27,10 @@ void setup() {
     BG.resize(width, height);
     
     roads = new Roads("json/roads_massive_simplified.geojson");
-    //poi = new POI(roads.toXY(42.499123, 1.538010), "Test", 30);
-    //roads.addPOI( poi );
+    
+    pois = new PointsOfInterest(this, roads);
+    pois.loadFromJSON("json/pois.json");
+    //pois.loadFromCSV("restaurants.tsv");
     
     agents = new Agents(this, roads);
     agents.loadFromJSON("json/clusters.json");
@@ -51,6 +55,8 @@ void draw() {
     
     if(run) agents.move(speed);
     agents.draw();
+    
+    pois.draw();
     
     /*
     Edge street = roads.closestStreet( new PVector(mouseX, mouseY) );
@@ -100,6 +106,7 @@ void draw() {
     text("Agents: " + agents.count() + "\nSpeed: " + (run ? round(speed*10) : "[PAUSED]") + "\nFramerate: " + round(frameRate) + "fps", 20, 20);
     
     agents.printLegend(20, 70);
+    pois.printLegend(200, 70);
     
     
 }
@@ -113,20 +120,25 @@ void keyPressed() {
             break;
             
         case '+':
-            speed += 0.1;
+            speed = constrain(speed + 0.1, 0, 5);
             break;
             
         case '-':
-            if(speed - 0.1 >= 0) speed -= 0.1;
+            speed = constrain(speed - 0.1, 0, 5);
             break;
             
         case 'h':
             heatmap.visible(Visibility.TOGGLE);
-            heatmap.update("Agents Density", agents.getAgents(), "heat");
+            heatmap.update("Agents Density", agents.get(), "heat");
             run = !heatmap.isVisible();
             break;
             
         case 'p':
+            heatmap.visible(Visibility.TOGGLE);
+            heatmap.update("Points of interest", pois.get(), "cool");
+            break;
+            
+        case 'n':
             heatmap.visible(Visibility.TOGGLE);
             heatmap.update("Nodes Density", roads.getNodes(), "cool");
             break;
@@ -138,5 +150,6 @@ void keyPressed() {
 void mouseClicked() {
     
     agents.select(mouseX, mouseY);
+    pois.select(mouseX, mouseY);
     
 }

@@ -99,28 +99,15 @@ public class Roads {
         }
         
         return new PVector[] {
-            toUTM(minLat, minLng),
-            toUTM(maxLat, maxLng)
+            Projection.toUTM(minLat, minLng, Projection.Datum.WGS84),
+            Projection.toUTM(maxLat, maxLng, Projection.Datum.WGS84)
         };
         
     }
 
-
-    private PVector toUTM(float Lat, float Lon) {
-
-        int Zone = floor(Lon / 6 + 31);
-        double Easting=0.5*Math.log((1+Math.cos(Lat*Math.PI/180)*Math.sin(Lon*Math.PI/180-(6*Zone-183)*Math.PI/180))/(1-Math.cos(Lat*Math.PI/180)*Math.sin(Lon*Math.PI/180-(6*Zone-183)*Math.PI/180)))*0.9996*6399593.62/Math.pow((1+Math.pow(0.0820944379, 2)*Math.pow(Math.cos(Lat*Math.PI/180), 2)), 0.5)*(1+ Math.pow(0.0820944379,2)/2*Math.pow((0.5*Math.log((1+Math.cos(Lat*Math.PI/180)*Math.sin(Lon*Math.PI/180-(6*Zone-183)*Math.PI/180))/(1-Math.cos(Lat*Math.PI/180)*Math.sin(Lon*Math.PI/180-(6*Zone-183)*Math.PI/180)))),2)*Math.pow(Math.cos(Lat*Math.PI/180),2)/3)+500000;
-        Easting=Math.round(Easting*100)*0.01;
-        double Northing = (Math.atan(Math.tan(Lat*Math.PI/180)/Math.cos((Lon*Math.PI/180-(6*Zone -183)*Math.PI/180)))-Lat*Math.PI/180)*0.9996*6399593.625/Math.sqrt(1+0.006739496742*Math.pow(Math.cos(Lat*Math.PI/180),2))*(1+0.006739496742/2*Math.pow(0.5*Math.log((1+Math.cos(Lat*Math.PI/180)*Math.sin((Lon*Math.PI/180-(6*Zone -183)*Math.PI/180)))/(1-Math.cos(Lat*Math.PI/180)*Math.sin((Lon*Math.PI/180-(6*Zone -183)*Math.PI/180)))),2)*Math.pow(Math.cos(Lat*Math.PI/180),2))+0.9996*6399593.625*(Lat*Math.PI/180-0.005054622556*(Lat*Math.PI/180+Math.sin(2*Lat*Math.PI/180)/2)+4.258201531e-05*(3*(Lat*Math.PI/180+Math.sin(2*Lat*Math.PI/180)/2)+Math.sin(2*Lat*Math.PI/180)*Math.pow(Math.cos(Lat*Math.PI/180),2))/4-1.674057895e-07*(5*(3*(Lat*Math.PI/180+Math.sin(2*Lat*Math.PI/180)/2)+Math.sin(2*Lat*Math.PI/180)*Math.pow(Math.cos(Lat*Math.PI/180),2))/4+Math.sin(2*Lat*Math.PI/180)*Math.pow(Math.cos(Lat*Math.PI/180),2)*Math.pow(Math.cos(Lat*Math.PI/180),2))/3);
-        if (Lat < 0) Northing = Northing + 10000000;
-        Northing=Math.round(Northing*100)*0.01;    
-        
-        return new PVector( (float) Easting, (float) Northing);
-    }
-    
     
     public PVector toXY(float lat, float lng) {
-        PVector projected = toUTM(lat, lng);
+        PVector projected = Projection.toUTM(lat, lng, Projection.Datum.WGS84);
         return new PVector(
             map(projected.x, boundaries[0].x, boundaries[1].x, 0, width),
             map(projected.y, boundaries[0].y, boundaries[1].y, height, 0)
@@ -135,33 +122,6 @@ public class Roads {
     
     public void draw(int stroke, color c) {
         for(Node node : nodes) node.draw(stroke, c);
-    }
-    
-    
-    
-    public void addPOI( POI poi ) {
-        Street closeStreet = closestStreet(poi.getPosition());
-        PVector connectionPoint = closestPoint(closeStreet, poi.getPosition() );
-        
-        // Check first node
-        Node connectionNode = null;
-        if(connectionPoint == closeStreet.getNode().getPosition()) connectionNode = closeStreet.getNode();
-        else {
-            if(connectionPoint == closeStreet.getParentNode().getPosition()) connectionNode = closeStreet.getParentNode();
-            else {
-                connectionNode = new Node( connectionPoint );
-                // Connect to neighbor nodes (disconnecting between them)
-
-            }
-        }
-        
-        connectionNode.connectBoth(poi, null, "POI access");
-        
-        if(connectionNode.getID() == -1) {
-            connectionNode.setID( nodes.size() );
-            nodes.add(poi);
-        }
-        
     }
     
     
@@ -419,11 +379,7 @@ private class Street implements Comparable<Street> {
         for(int i = 0; i < vertices.size(); i++) {
             if( vertices.get(i).equals(node.getPosition()) ) {
                 
-               // println( name + " " + (i + 1) + " -> " + (vertices.size() - 2) + "["+ vertices.size() +"]" );
-                
                 ArrayList<PVector> splittedVertices = i >= vertices.size()-2 ? new ArrayList() : new ArrayList(vertices.subList(i + 1, vertices.size()-1));
-                //println(splittedVertices.size());
-                
                 node.connect(toNode, splittedVertices, name);
                 vertices = new ArrayList( vertices.subList(0, i + 1) );
                 

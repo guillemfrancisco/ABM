@@ -40,6 +40,7 @@ public class Heatmap {
         if( file.exists() ) gradients.put(name, loadImage(path));
     }
   
+  
     public void visible(Visibility v) {
         switch(v) {
             case HIDE:
@@ -66,6 +67,7 @@ public class Heatmap {
     
     
     public void update(String title, ArrayList objects, String gradient) {
+        maxValue = 0;
         this.title = title;
         if(visible) {
             PImage gradientMap = createImage(width, height, ARGB);
@@ -75,9 +77,9 @@ public class Heatmap {
                 PVector position = obj.getPosition();
                 gradientMap = addGradientPoint(gradientMap, position.x, position.y);
             }
+            gradientMap.updatePixels();
             PImage gradientColors = gradients.containsKey(gradient) ? gradients.get(gradient) : gradients.get("default");
             heatmap = colorize(gradientMap, gradientColors);
-            gradientMap.updatePixels();
         }
     }
     

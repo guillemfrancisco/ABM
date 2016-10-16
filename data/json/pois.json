@@ -1,0 +1,64 @@
+[
+		
+	{
+		"name": "Restaurants",
+		"type": "RESTAURANT",
+		"style": {
+			"color": "#FA5F88",
+			"size": 3
+		},
+		"items": [
+			
+			{
+				"id": 0,
+				"name": "El Rebost del Padrí",
+				"type": "Casolana",
+				"location": [42.506896,	1.521099],
+				"capacity": 15,
+				"languages": ["CA","ES","EN"],
+				"opening": [[12,16], [20,23]],
+				"price": {
+					"menu": null,
+					"carte": [8,15]
+				},
+				"services": ["phone", "wifi", "credit-card"],
+				"rate": 4.5,
+			},
+			
+			{
+				"id": 2,
+				"name": "Valor",
+				"type": "Moderna",
+				"location": [42.495446, 1.498714],
+				"capacity": 20,
+				"languages": ["CA","ES","EN", "FR"],
+				"opening": [[12,16], [20,23]],
+				"price": {
+					"menu": 15,
+					"carte": [10,16]
+				},
+				"services": ["AC", "phone", "wifi", "menu", "gluten-free", "pets-alowed", "credit-card"],
+				"rate": 5,
+			},
+			
+			{
+				"id": 3,
+				"name": "Restaurant Plaza",
+				"type": "Tradicional",
+				"location": [42.506317,	1.521836],
+				"capacity": 50,
+				"languages": ["CA","ES","EN", "FR"],
+				"opening": [[12,16], [20,23]],
+				"price": {
+					"menu": 20,
+					"carte": [12,23]
+				},
+				"services": ["AC", "wheelchair", "parking", "phone", "wifi", "private", "reception", "terrace", "menu", "gluten-free", "credit-card"],
+				"rate": 3.5,
+			}
+			
+		]
+		
+	}
+	
+]
