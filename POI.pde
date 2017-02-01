@@ -11,46 +11,50 @@ public class PointsOfInterest extends Facade {
 
 // POI FABRIC -------------->
 private class POIFabric extends Fabric {
-
+    
     public ArrayList<POI> loadFromJSON(File JSONFile, Roads roads) {
+        
         ArrayList<POI> pois = new ArrayList();
-                    
-            JSONArray clusters = loadJSONArray(JSONFile);
-            for(int i = 0; i < clusters.size(); i++) {
-                JSONObject cluster = clusters.getJSONObject(i);
+        int count = count();
+        
+        JSONArray clusters = loadJSONArray(JSONFile);
+        for(int i = 0; i < clusters.size(); i++) {
+            JSONObject cluster = clusters.getJSONObject(i);
+            
+            String type        = cluster.getString("type");
+            String clusterName = cluster.getString("name");
+            JSONObject style   = cluster.getJSONObject("style");
+            String tint        = style.getString("color");
+            int size           = style.getInt("size");
+            
+            JSONArray items   = cluster.getJSONArray("items");
+            for(int j = 0; j < items.size(); j++) {
+                JSONObject item = items.getJSONObject(j);
                 
-                String type        = cluster.getString("type");
-                String clusterName = cluster.getString("name");
-                JSONObject style   = cluster.getJSONObject("style");
-                String tint        = style.getString("color");
-                int size           = style.getInt("size");
+                int id              = item.getInt("id");
+                String name         = item.getString("name");
+                PVector location    = roads.toXY(
+                                        item.getJSONArray("location").getFloat(0),
+                                        item.getJSONArray("location").getFloat(1)
+                                    );
+                int capacity        = item.getInt("capacity");
+                JSONArray languages = item.getJSONArray("languages");
                 
-                JSONArray items   = cluster.getJSONArray("items");
-                for(int j = 0; j < items.size(); j++) {
-                    JSONObject item = items.getJSONObject(j);
-                    
-                    int id              = item.getInt("id");
-                    String name         = item.getString("name");
-                    PVector location    = roads.toXY(
-                                            item.getJSONArray("location").getFloat(0),
-                                            item.getJSONArray("location").getFloat(1)
-                                        );
-                    int capacity        = item.getInt("capacity");
-                    JSONArray languages = item.getJSONArray("languages");
-                    
-                    pois.add( new POI(roads, pois.size(), location, name, capacity, size) );
-                    counter.increment(clusterName);
-                    
-                }
+                pois.add( new POI(roads, count, location, name, capacity, size) );
+                counter.increment(clusterName);
+                count++;
                 
             }
-            
-            return pois;
-     }
+        }
+        
+        return pois;
+    }
       
      
-     public ArrayList<POI> loadFromCSV(String pathTSV, Roads roads) {
+    public ArrayList<POI> loadFromCSV(String pathTSV, Roads roads) {
+         
         ArrayList<POI> pois = new ArrayList();
+        int count = count();
         
         Table table = loadTable(pathTSV, "header, tsv");
         for(TableRow row : table.rows()) {
@@ -60,26 +64,28 @@ private class POIFabric extends Fabric {
             int capacity        = row.getInt("CAPACITY");
             int size            = 3;
             
-            pois.add( new POI(roads, pois.size(), location, name, capacity, size) );
+            pois.add( new POI(roads, count, location, name, capacity, size) );
             counter.increment(pathTSV); 
+            count++;
         }
             
         return pois;
-     }
+    }
      
 }
 
 
 
 // POI CLASSES -------------->
-public class POI implements MapItem, Placeable {
+public class POI implements Placeable {
 
     private final int ID;
     private final String NAME;
     private final int CAPACITY;
     private final int MIN_SIZE;
     
-    private final Node node;
+    private final Node NODE;
+    private PVector conn;
     private final PVector POS;
     
     private int occupancy;
@@ -94,11 +100,13 @@ public class POI implements MapItem, Placeable {
         
         occupancy = round( random(0, CAPACITY) );
         
-        node = null;
         POS = pos;
         
+        NODE = null;
+        
         // Connect poi to roadmap
-        //node = connect(roadmap, pos);
+        //NODE = connect(roadmap, pos);
+        //conn = connect(roadmap, pos);
         
     }
     
@@ -124,38 +132,39 @@ public class POI implements MapItem, Placeable {
         }
         
         //connPos = connectNode.getPosition();
-        //line(pos.x, pos.y, connPos.x, connPos.y);
+        //stroke(#FF0000);
+        //line(POS.x, POS.y, conn.x, conn.y);
     }
     
     
+    /*
     private Node connect(Roads roadmap, PVector pos) {
-        Street closeStreet = roadmap.closestStreet(pos);
-        PVector connectPoint = roadmap.closestPoint(closeStreet, pos);
+        Lane closeLane = roadmap.closestLane(pos);
+        Lane closeLaneBack = closeLane.getNode().laneTo( closeLane.getParentNode() );
+        PVector connectPoint = roadmap.closestPoint(closeLane, pos);
         
         // Check first node
         Node connectNode = null;
-        if(connectPoint == closeStreet.getNode().getPosition()) connectNode = closeStreet.getNode();
+        if(connectPoint == closeLane.getNode().getPosition()) connectNode = closeLane.getNode();
         else {
-            if(connectPoint == closeStreet.getParentNode().getPosition()) connectNode = closeStreet.getParentNode();
+            if(connectPoint == closeLane.getParentNode().getPosition()) connectNode = closeLane.getParentNode();
             else {
-                connectNode = new Node( connectPoint );
-                // Connect to neighbor nodes (disconnecting between them)
-
+                connectNode = closeLane.split(connectPoint);
+                closeLaneBack.split(connectNode);
             }
         }
         
+        Node node = new Node(pos);
         connectNode.connectBoth(node, null, "POI access");
         
-        /*
         if(connectNode.getID() == -1) {
-            connectNode.setID( nodes.size() );
-            nodes.add(poi);
+            connectNode.setID( roadmap.size() );
+            roadmap.add(connectNode);
         }
-        */
         
-        return null;
+        return node;
     }
-    
+    */
     
     public void select(int mouseX, int mouseY) {
         selected = dist(POS.x, POS.y, mouseX, mouseY) < MIN_SIZE;

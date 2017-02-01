@@ -1,10 +1,10 @@
 public class Path {
 
-    private ArrayList<Street> streets = new ArrayList();
+    private ArrayList<Lane> lanes = new ArrayList();
     private float length = 0;
     
     private Node inNode = null;
-    private Street street;
+    private Lane lane;
     private int toVertex;
     
     private boolean arrived = false;
@@ -13,29 +13,29 @@ public class Path {
     
 
     public boolean available() { return getLength() > 1; }
-    public int size() { return streets.size(); }
+    public int size() { return lanes.size(); }
     public float getLength() { return length; }
     public boolean hasArrived() { return arrived; }
     
     public Node inNode() { return inNode; }
     
-    public void nextStreet() {
-        inNode = street.getNode();
-        int nextStreet = streets.indexOf(street) + 1;
-        if( nextStreet < streets.size() ) {
-            street = streets.get(nextStreet);
+    public void nextLane() {
+        inNode = lane.getFinalNode();
+        int nextLane = lanes.indexOf(lane) + 1;
+        if( nextLane < lanes.size() ) {
+            lane = lanes.get(nextLane);
             toVertex = 1;
         } else arrived = true;
     }
     
     
     public PVector move(PVector pos, float speed) {
-        PVector vertex = street.getVertex( toVertex );
+        PVector vertex = lane.getVertex( toVertex );
         PVector dir = PVector.sub(vertex, pos);
         PVector movement = dir.copy().normalize().mult(speed);
         if(dir.mag() > movement.mag()) return movement;
         else {
-            if( street.isLast( vertex ) ) nextStreet();
+            if( lane.isLastVertex( vertex ) ) nextLane();
             else toVertex++;
             return dir;
         }
@@ -43,19 +43,19 @@ public class Path {
     
     
     public void draw(int stroke, color c) {
-        for(Street street : streets) {
-            street.draw(stroke, c);
+        for(Lane lane : lanes) {
+            lane.draw(stroke, c);
         }
     }
 
 
     public void clear() {
-        streets = new ArrayList();
+        lanes = new ArrayList();
         inNode = null;
         length = 0;
         arrived = false;
         
-        street = null;
+        lane = null;
         toVertex = 0;
     }
     
@@ -66,13 +66,13 @@ public class Path {
             inNode = origin;
             ArrayList<Node> pathNodes = aStar(graph, origin, destination);
             for(int i = 1; i < pathNodes.size(); i++) {
-                Street edge = pathNodes.get(i-1).streetTo(pathNodes.get(i));
-                streets.add(edge);
+                Lane edge = pathNodes.get(i-1).shortestLaneTo(pathNodes.get(i));
+                lanes.add(edge);
                 length += edge.getLength();
             }
             
-            if(streets.size() > 0) {
-                street = streets.get(0);
+            if(lanes.size() > 0) {
+                lane = lanes.get(0);
                 toVertex = 1;
             }
         }
@@ -98,11 +98,11 @@ public class Path {
                 open.remove(currentNode);
                 closed.add(currentNode);
                 if(currentNode == destination) break;
-                for(Street street : currentNode.outboundStreets()) {
-                    Node neighbor = street.getNode();
-                    if( !street.isOpen() || closed.contains(neighbor)) continue;
+                for(Lane lane : currentNode.outboundLanes()) {
+                    Node neighbor = lane.getFinalNode();
+                    if( !lane.isOpen() || closed.contains(neighbor)) continue;
                     boolean neighborOpen = open.contains(neighbor);
-                    float costToNeighbor = currentNode.getG() + street.getLength();
+                    float costToNeighbor = currentNode.getG() + lane.getLength();
                     if( costToNeighbor < neighbor.getG() || !neighborOpen ) {
                         neighbor.setParent(currentNode); 
                         neighbor.setG(costToNeighbor);

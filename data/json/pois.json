@@ -55,6 +55,22 @@
 				},
 				"services": ["AC", "wheelchair", "parking", "phone", "wifi", "private", "reception", "terrace", "menu", "gluten-free", "credit-card"],
 				"rate": 3.5,
+			},
+			
+			{
+				"id": 4,
+				"name": "Test",
+				"type": "Tradicional",
+				"location": [42.495407, 1.518155],
+				"capacity": 50,
+				"languages": ["CA","ES","EN", "FR"],
+				"opening": [[12,16], [20,23]],
+				"price": {
+					"menu": 20,
+					"carte": [12,23]
+				},
+				"services": ["AC", "wheelchair", "parking", "phone", "wifi", "private", "reception", "terrace", "menu", "gluten-free", "credit-card"],
+				"rate": 3.5,
 			}
 			
 		]

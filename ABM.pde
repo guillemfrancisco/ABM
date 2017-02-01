@@ -9,7 +9,7 @@ PointsOfInterest pois;
 
 Heatmap heatmap;
 
-Path mousePath;
+//Path mousePath;
 
 boolean run = false;
 float speed = 0.5;
@@ -23,13 +23,14 @@ void setup() {
     pixelDensity(2); // Reduce fps to half
     
     myFont = createFont("Montserrat-Light", 32);
-    BG = loadImage("img/bg/wireframe.jpg");
-    BG.resize(width, height);
+    
+    //BG = loadImage("img/bg/wireframe.jpg");
+    //BG.resize(width, height);
     
     roads = new Roads("json/roads_massive_simplified.geojson");
     
     pois = new PointsOfInterest(this, roads);
-    pois.loadFromJSON("json/pois.json");
+    //pois.loadFromJSON("json/pois.json");
     //pois.loadFromCSV("restaurants.tsv");
     
     agents = new Agents(this, roads);
@@ -40,7 +41,7 @@ void setup() {
     heatmap.addGradient("heat", "img/heatmap/heat.png");
     heatmap.addGradient("cool", "img/heatmap/cool.png");
     
-    mousePath = new Path();
+    //mousePath = new Path();
     
 }
 
@@ -49,7 +50,7 @@ void draw() {
     
     background(255);
     
-    image(BG, 0, 0);
+    if(BG != null) image(BG, 0, 0);
     
     roads.draw(1, #F0F3F5);
     
@@ -59,10 +60,10 @@ void draw() {
     pois.draw();
     
     /*
-    Edge street = roads.closestStreet( new PVector(mouseX, mouseY) );
-    PVector point = roads.closestPoint(street, new PVector(mouseX, mouseY));
+    Edge lane = roads.closestLane( new PVector(mouseX, mouseY) );
+    PVector point = roads.closestPoint(lane, new PVector(mouseX, mouseY));
     stroke(#FF0000, 50);
-    street.draw(1, #FF0000);
+    lane.draw(1, #FF0000);
     line(mouseX, mouseY, point.x, point.y);
     */
     
@@ -94,7 +95,7 @@ void draw() {
     /*
     stroke(#FF0000);
     //closest.draw(1, #FF0000);
-    //PVector closest = roads.getClosestStreet( new PVector(mouseX, mouseY) );
+    //PVector closest = roads.getClosestLane( new PVector(mouseX, mouseY) );
     PVector closest = roads.closestPoint( new PVector(mouseX, mouseY) );
     line(mouseX, mouseY, closest.x, closest.y);
     */
@@ -129,13 +130,13 @@ void keyPressed() {
             
         case 'h':
             heatmap.visible(Visibility.TOGGLE);
-            heatmap.update("Agents Density", agents.get(), "heat");
+            heatmap.update("Agents Density", agents.getItems(), "heat");
             run = !heatmap.isVisible();
             break;
             
         case 'p':
             heatmap.visible(Visibility.TOGGLE);
-            heatmap.update("Points of interest", pois.get(), "cool");
+            heatmap.update("Points of interest", pois.getItems(), "cool");
             break;
             
         case 'n':

@@ -8,7 +8,7 @@ public class Agents extends Facade {
 
     
     public void move(float speed) {
-        for(MapItem item : items) {
+        for(Placeable item : items) {
             Agent agent = (Agent) item;
             agent.move(speed);
         }
@@ -24,7 +24,8 @@ private class AgentFabric extends Fabric {
     public ArrayList<Agent> loadFromJSON(File JSONFile, Roads roads) {
 
         ArrayList<Agent> agents = new ArrayList();
-            
+        int count = count();
+        
         JSONArray clusters = loadJSONObject(JSONFile).getJSONArray("clusters");
         for(int i = 0; i < clusters.size(); i++) {
             JSONObject cluster = clusters.getJSONObject(i);
@@ -41,18 +42,17 @@ private class AgentFabric extends Fabric {
             for(int j = 0; j < amount; j++) {
                 Agent agent = null;
                 
-                if(type.equals("PERSON")) agent = new Person(agents.size(), roads, size, tint);
-                if(type.equals("CAR")) agent = new Car(agents.size(), roads, size, tint);
+                if(type.equals("PERSON")) agent = new Person(count, roads, size, tint);
+                if(type.equals("CAR")) agent = new Car(count, roads, size, tint);
                 
                 if(agent != null) {
                     agents.add(agent);
                     counter.increment(name);
+                    count++;
                 }
-                
             }
-            
         }
-    
+        
         return agents;
     }
     
@@ -65,7 +65,7 @@ private class AgentFabric extends Fabric {
 
 
 // AGENTS CLASS ----------------->
-public abstract class Agent implements MapItem, Placeable {
+public abstract class Agent implements Placeable {
 
     public final int ID;
     protected final Roads ROADMAP;
@@ -87,10 +87,9 @@ public abstract class Agent implements MapItem, Placeable {
         SIZE = size;
         COLOR = unhex( "FF" + hexColor.substring(1) );
         
-        inNode = map.randomNode();
-        pos = inNode.getPosition();
+        inNode = ROADMAP.randomNode();
         toNode = findDestination();
-        
+        pos = inNode.getPosition();
     }
     
     

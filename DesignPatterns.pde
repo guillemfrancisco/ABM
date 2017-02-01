@@ -1,20 +1,15 @@
 public interface Placeable {
     public PVector getPosition();
-}
-
-
-public interface MapItem {
     public void select(int mouseX, int mouseY);
     public void draw();
 }
-
 
 public abstract class Facade {
     
     protected final PApplet PAPPLET;
     protected final Roads ROADMAP;
     protected Fabric fabric;
-    ArrayList<MapItem> items = new ArrayList();
+    protected ArrayList<Placeable> items = new ArrayList();
     
     public Facade(PApplet papplet, Roads roadmap) {
         PAPPLET = papplet;
@@ -26,18 +21,18 @@ public abstract class Facade {
     }
     
     
-    public ArrayList get() {
+    public ArrayList getItems() {
         return items;
     }
     
     
     public void draw() {
-        for(MapItem item : items) item.draw();
+        for(Placeable item : items) item.draw();
     }
     
     
     public void select(int mouseX, int mouseY) {
-        for(MapItem item : items) item.select(mouseX, mouseY);
+        for(Placeable item : items) item.select(mouseX, mouseY);
     }
 
     
@@ -73,6 +68,12 @@ public abstract class Fabric {
     
     public IntDict getCounter() {
         return counter;
+    }
+    
+    public int count() {
+        int count = 0;
+        for(String name : counter.keyArray()) count += counter.get(name);
+        return count;
     }
     
     public abstract ArrayList loadFromJSON(File JSONFile, Roads roads);

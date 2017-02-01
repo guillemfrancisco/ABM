@@ -18,7 +18,7 @@ public static class Projection {
             ECC = sqrt(1 - pow(POLAR_RADIUS, 2) / pow(EQUATORIAL_RADIUS, 2));
         }
         
-        public String toString() { return "EQUATORIAL_RADIUS:" + EQUATORIAL_RADIUS + " POLAR_RADIUS:" + POLAR_RADIUS + " FLATTENING:" + FLATTENING + " ECCENTRICITY:" + ECC; }
+        public String toString() { return "RADIUS (EQUATOR):" + EQUATORIAL_RADIUS + " RADIUS (POLES):" + POLAR_RADIUS + " FLATTENING:" + FLATTENING + " ECCENTRICITY:" + ECC; }
     }
     
     
