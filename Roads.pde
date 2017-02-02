@@ -19,48 +19,67 @@ public class Roads {
             JSONObject props = lane.getJSONObject("properties");
             String type = props.isNull("type") ? "null" : props.getString("type");
             String name = props.isNull("name") ? "null" : props.getString("name");
-            //boolean oneWay = props.isNull("oneway") ? false : props.getBoolean("oneway");
+            boolean oneWay = props.isNull("oneway") ? false : props.getInt("oneway") == 1 ? true : false;
+            //boolean oneWay = false;
       
             JSONArray points = lane.getJSONObject("geometry").getJSONArray("coordinates");
             
             Node prevNode = null;
+            Node currNode = null;
             ArrayList vertices = new ArrayList();
+            
             for(int j = 0; j < points.size(); j++) {
             
                 PVector point = toXY(points.getJSONArray(j).getFloat(1), points.getJSONArray(j).getFloat(0));
                 
-                Node node = null;
-                for(Node n : nodes) {
-                    node = n.find( new Node(point) );
-                    if(node != null) {
-                        if(prevNode != null) {
-                            prevNode.connectBoth(node, vertices, name);
-                            vertices = new ArrayList();
-                        }
-                        prevNode = node;
-                        break;
+                vertices.add(point);
+                
+                currNode = createNodeIfVertex(point);
+                if(currNode != null) {
+                    if(j > 0 && j < points.size()) {
+                        
+                        if(oneWay) prevNode.connect(currNode, vertices, name);
+                        else prevNode.connectBoth(currNode, vertices, name);
+                        
+                        vertices = new ArrayList();
+                        vertices.add(point);
+                        prevNode = currNode;
                     }
-                }
+                } else currNode = new Node(point);
                 
-                // Point is new
-                if(node == null) {
-                    if(j == 0 || j == points.size() - 1) { // Is first or last point is a node
-                        node = new Node(point);
-                        if(prevNode != null) prevNode.connectBoth(node, vertices, name);
-                        prevNode = node;
-                    } else vertices.add(point);
-                }
                 
-                // Save node if NEW (not registered)
-                if( node != null && node.getID() == -1 ) {
-                    node.setID( nodes.size() );
-                    nodes.add(node);
+                if(j == 0) {
+                    prevNode = currNode;
+                    currNode.register(nodes);
+                } else if(j == points.size()-1) {
+                    if(oneWay) prevNode.connect(currNode, vertices, name);
+                    else prevNode.connectBoth(currNode, vertices, name);
+                    currNode.register(nodes);
                 }
                 
             }
         }
     }
 
+
+    private Node createNodeIfVertex(PVector position) {
+        for(Node node : nodes) {
+            if( position.equals(node.getPosition()) ) return node;
+            for(Lane lane : node.outboundLanes()) {
+                if( position.equals(lane.getFinalNode().getPosition()) ) return lane.getFinalNode();
+                else if( lane.contains(position) ) {
+                    Lane laneBack = lane.findContrariwise();
+                    Node newNode = new Node(position);
+                    if(lane.split(newNode)) {
+                        if(laneBack != null) laneBack.split(newNode);
+                        newNode.register(nodes);
+                        return newNode;
+                    }
+                }
+            }
+        }
+        return null;
+    }
 
 
     public ArrayList<Node> getNodes() {
@@ -175,6 +194,11 @@ public class Roads {
         return closest;
     }
     
+    
+    public void select(int mouseX, int mouseY) {
+        for(Node node : nodes) node.select(mouseX, mouseY);
+    }
+    
 }
 
 
@@ -185,6 +209,7 @@ private class Node implements Placeable {
     private int id;
     protected PVector pos;
     private ArrayList<Lane> lanes = new ArrayList();
+    private boolean selected;
     
     // Pathfinding variables
     private Node parent;
@@ -192,18 +217,16 @@ private class Node implements Placeable {
     private float g;
     private float h;
     
-    public Node(PVector pos) {
-        this.id = -1;
-        this.pos = pos;
+    public Node(PVector _pos) {
+        id = -1;
+        pos = _pos;
     }
     
-    
-    public void setID(int id) {
-        this.id = id;
-    }
-    
-    public int getID() {
-        return id;
+    public void register(ArrayList<Node> nodes) {
+        if(id == -1) {
+            id = nodes.size();
+            nodes.add(this);
+        }
     }
     
     public PVector getPosition() {
@@ -244,9 +267,9 @@ private class Node implements Placeable {
     
     
     /* PATHFINDING METHODS */
-    public void setParent(Node parent) { this.parent = parent; }
+    public void setParent(Node _parent) { parent = _parent; }
     public Node getParent() { return parent; }
-    public void setG(float cost) { g = cost; }
+    public void setG(float _g) { g = _g; }
     public float getG() { return g; }
     public void setF(Node destination) {
         h =  pos.dist(destination.getPosition());
@@ -271,47 +294,40 @@ private class Node implements Placeable {
         node.connect(this, vertices, name);
     }
     
-    
-    protected Node find(Node node) {
-        if( pos.equals(node.getPosition()) ) return this;
-        for(Lane lane : outboundLanes()) {
-            if( lane.getFinalNode().getPosition().equals(node.getPosition()) ) return lane.getFinalNode();
-            else {
-                Lane laneBack = lane.getFinalNode().shortestLaneTo(this);
-                Node newNode = lane.split(node);
-                if(newNode != null) {
-                    if(laneBack != null) newNode = laneBack.split(newNode);
-                    //Lane laneBack = last.shortestLaneTo(this);
-                    //if(laneBack != null) newNode = laneBack.split(newNode);
-                    return newNode;
-                }
-            }
-        }
-        return null;
-    }
-    
     public void draw() {
         stroke(#000000);
         point(pos.x, pos.y);
     }
     
     public void draw(int stroke, color c) {
-        fill(c); noStroke();
+        
+        if(id == 172 || id == 38 || id == 273 ||id == 274 ||id == 8 ||id == 283 ||id == 651) {
+            stroke(#FF0000); strokeWeight(3);
+            point(pos.x, pos.y);
+        }
+        
         for(Lane lane : lanes) {
-            lane.draw(stroke, c);
+            if(selected) {
+                lane.draw(2, #FF0000);
+                fill(0); textSize(8);
+                text(id, pos.x, pos.y);
+            }
+            else lane.draw(stroke, c);
         }
     }
     
     public void draw(Node n, int stroke, color c) {
-        Lane edge = shortestLaneTo(n);
-        edge.draw(stroke, c);
-        PVector nextPos = edge.getFinalNode().getPosition();
+        Lane lane = shortestLaneTo(n);
+        lane.draw(stroke, c);
+        PVector nextPos = lane.getFinalNode().getPosition();
         textAlign(LEFT, CENTER); textSize(9); fill(#990000);
-        text(edge.getLength(), nextPos.x + 5, nextPos.y);
+        text(lane.getLength(), nextPos.x + 5, nextPos.y);
     }
     
     
-    public void select(int mousX, int mouseY) {}
+    public void select(int mouseX, int mouseY) {
+        selected = dist(pos.x, pos.y, mouseX, mouseY) < 5;
+    }
     
     
     public String toString() {
@@ -328,25 +344,26 @@ private class Lane implements Comparable<Lane> {
     private Node initNode;
     private Node finalNode;
     private float length;
-    private ArrayList<PVector> vertices = new ArrayList();
+    private ArrayList<PVector> vertices;
     private boolean open = true;
     
     private ArrayList<Agent> crowd = new ArrayList();
     
     
-    public Lane(String name, Node initNode, Node finalNode, ArrayList<PVector> vertices) {
-        this.name = name;
-        this.initNode = initNode;
-        this.finalNode = finalNode;
-        this.vertices.add(initNode.getPosition());
-        if(vertices != null) this.vertices.addAll(vertices);
-        this.vertices.add(finalNode.getPosition());
-        computeLength();
-
+    public Lane(String _name, Node _initNode, Node _finalNode, ArrayList<PVector> _vertices) {
+        name = _name;
+        initNode = _initNode;
+        finalNode = _finalNode;
+        if(_vertices != null && _vertices.size() != 0) vertices = new ArrayList(_vertices);
+        else {
+            vertices = new ArrayList();
+            vertices.add(initNode.getPosition());
+            vertices.add(finalNode.getPosition());
+        }
+        length = computeLength();
     }
     
     
-    public Node getInitNode() { return initNode; }
     public Node getFinalNode() { return finalNode; }
     public ArrayList<PVector> getVertices() { return new ArrayList(vertices); }
     public PVector getVertex(int i) {
@@ -354,12 +371,12 @@ private class Lane implements Comparable<Lane> {
         return null;
     }
     
-    public void computeLength() {
-        length = 0;
-        for(int i = 1; i < vertices.size(); i++) {
-            length += vertices.get(i-1).dist( vertices.get(i) );
-        }
+    public float computeLength() {
+        float dist = 0;
+        for(int i = 1; i < vertices.size(); i++) dist += vertices.get(i-1).dist( vertices.get(i) );
+        return dist;
     }
+    
     public float getLength() { return length; }
     
     public boolean isOpen() { return open; }
@@ -369,51 +386,41 @@ private class Lane implements Comparable<Lane> {
     public boolean contains(PVector vertex) {
         return vertices.indexOf(vertex) >= 0;
     }
-   
-    public PVector getLastVertex() {
-        return vertices.get( vertices.size() - 1 );
-    }
-    
-    public boolean isLastVertex( PVector vertex ) {
-        return vertex.equals( getLastVertex() );
-    }
-    
-    /*
-    protected Node split(PVector pos) {
-        int index = vertices.indexOf(pos);
-        if(index > 0 && index < vertices.size()-1) {
-            Node newNode = new Node(pos);
-            ArrayList<PVector> splittedVertices = new ArrayList( vertices.subList(index, vertices.size()) );
-            newNode.connect(finalNode, splittedVertices, name);
-            finalNode = newNode;
-            vertices = new ArrayList( vertices.subList(0, index) );
-            computeLength();
-            return newNode;
-        }
-        return null;
-    }
-    */
-    
-    protected Node split(Node node) {
-        for(int i = 0; i < vertices.size(); i++) {
-            if( vertices.get(i).equals(node.getPosition()) ) {
-                
-                ArrayList<PVector> splittedVertices = i >= vertices.size()-2 ? new ArrayList() : new ArrayList(vertices.subList(i + 1, vertices.size()-1));
-                node.connect(finalNode, splittedVertices, name);
-                vertices = new ArrayList( vertices.subList(0, i + 1) );
-                
-                length = 0;
-                for(int j = 1; j < this.vertices.size(); j++) {
-                    length += this.vertices.get(i-1).dist( this.vertices.get(i) );
-                }
-                
-                finalNode = node;
-                return node;
-            }
-        }
-        return null;
-    }
 
+
+    public boolean isLastVertex( PVector vertex ) {
+        return vertex.equals( vertices.get( vertices.size() - 1 ) );
+    }
+    
+    
+    public Lane findContrariwise() {
+        for(Lane otherLane : finalNode.outboundLanes()) {
+            if( otherLane.isContrariwise(this) ) return otherLane;
+        }
+        return null;
+    }
+    
+    
+    public boolean isContrariwise(Lane lane) {
+        ArrayList<PVector> reversedVertices = new ArrayList(lane.getVertices());
+        Collections.reverse(reversedVertices);
+        return vertices.equals(reversedVertices);
+    }
+    
+    
+    protected boolean split(Node node) {
+        int i = vertices.indexOf(node.getPosition());
+        if(i > 0 && i < vertices.size()-1) {
+            ArrayList<PVector> splittedVertices = new ArrayList( vertices.subList(i, vertices.size()) );
+            node.connect(finalNode, splittedVertices, name);
+            vertices = new ArrayList( vertices.subList(0, i+1) );
+            finalNode = node;
+            length = computeLength();
+            return true;
+        }
+        return false;
+    }
+    
     /*
     protected Node break(PVector point) {
         for(int i = 0; i < vertices.size() - 1; i++) {
@@ -429,8 +436,8 @@ private class Lane implements Comparable<Lane> {
     public void draw(int stroke, color c) {
         stroke(c); strokeWeight(stroke);
         for(int i = 1; i < vertices.size(); i++) {
-            PVector vertex = vertices.get(i);
             PVector prevVertex = vertices.get(i-1);
+            PVector vertex = vertices.get(i);
             line(prevVertex.x, prevVertex.y, vertex.x, vertex.y);
         }
     }
@@ -446,6 +453,7 @@ private class Lane implements Comparable<Lane> {
 }
 
 
+/*
 static final Comparator<Lane> LENGTH = new Comparator<Lane>() {
     public int compare(Lane s1, Lane s2) {
         if(s1.getLength() < s2.getLength()) return - 1;
@@ -453,7 +461,7 @@ static final Comparator<Lane> LENGTH = new Comparator<Lane>() {
         else return 0;
     }
 };
-
+*/
 
 
 
