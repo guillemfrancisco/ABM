@@ -21,12 +21,12 @@ public class Agents extends Facade {
 // AGENTS FABRIC --------------->
 private class AgentFabric extends Fabric {
 
-    public ArrayList<Agent> loadFromJSON(File JSONFile, Roads roads) {
+    public ArrayList<Agent> loadFromJSON(File file, Roads roads) {
 
         ArrayList<Agent> agents = new ArrayList();
         int count = count();
         
-        JSONArray clusters = loadJSONObject(JSONFile).getJSONArray("clusters");
+        JSONArray clusters = loadJSONObject(file).getJSONArray("clusters");
         for(int i = 0; i < clusters.size(); i++) {
             JSONObject cluster = clusters.getJSONObject(i);
             
@@ -57,7 +57,7 @@ private class AgentFabric extends Fabric {
     }
     
     
-    public ArrayList<Agent> loadFromCSV(String pathCSV, Roads roadmap) {
+    public ArrayList<Agent> loadFromCSV(String path, Roads roadmap) {
         return null;
     }
     
@@ -74,11 +74,11 @@ public abstract class Agent implements Placeable {
     
     protected boolean selected = false;
     
-    protected PVector pos = new PVector();
-    protected Node inNode = null,
-                 toNode = null;
-    protected float distTraveled = 0;
-    protected Path path = new Path();
+    protected POI destination;
+    protected PVector pos;
+    protected Path path;
+    protected Node inNode;
+    protected float distTraveled;
     
     
     public Agent(int id, Roads map, int size, String hexColor) {
@@ -86,10 +86,11 @@ public abstract class Agent implements Placeable {
         ROADMAP = map;
         SIZE = size;
         COLOR = unhex( "FF" + hexColor.substring(1) );
-        
+
+        path = new Path(ROADMAP);    
         inNode = ROADMAP.randomNode();
-        toNode = findDestination();
         pos = inNode.getPosition();
+        destination = findDestination();
     }
     
     
@@ -98,39 +99,38 @@ public abstract class Agent implements Placeable {
     }
     
     
-    public Node findDestination() {
-        Node destination = null;
-        while(true) {
-            destination = ROADMAP.randomNode();
-            if( !destination.equals(inNode) ) break;
+    public POI findDestination() {
+        POI destination = null;
+        while(destination == null) {
+            destination = (POI)pois.getRandom();
         }
         return destination;
     }
     
     
     public void move(float speed) {
-        if(!path.available()) path.findPath(ROADMAP.getNodes(), inNode, toNode);
+        if(!path.available()) path.findPath(ROADMAP.getNodes(), inNode, destination.getNode());
         else {
             if( !path.hasArrived() ) {
                 PVector movement = path.move(pos, speed);
                 pos.add( movement );
                 distTraveled += movement.mag();
                 inNode = path.inNode();
-            } else {
-                toNode = findDestination();
-                path.clear();
-            }
+            } else whenArrived();
+        }
+    }
+    
+    public void select(int mouseX, int mouseY) {
+        selected = dist(mouseX, mouseY, pos.x, pos.y) < SIZE;
+        if(selected) {
+            println("Agent " + ID + " GOING TO " + destination.getNode().id);
         }
     }
     
     
-    public void select(int mouseX, int mouseY) {
-        selected = dist(mouseX, mouseY, pos.x, pos.y) < SIZE;
-    }
-    
-    
     public abstract void draw();
-
+    protected abstract void whenArrived();
+    
 }
 
 
@@ -141,7 +141,6 @@ private class Person extends Agent {
         super(id, map, size, hexColor);
     }
     
-    
     public void draw() {
         if(selected) {
             path.draw(1, COLOR);
@@ -150,6 +149,11 @@ private class Person extends Agent {
         }
         fill(COLOR); noStroke();
         ellipse(pos.x, pos.y, SIZE, SIZE);
+    }
+
+    protected void whenArrived() {
+        path.clear();
+        destination = findDestination();
     }
 
 }
@@ -171,6 +175,10 @@ private class Car extends Agent {
         }
         noFill(); stroke(COLOR); strokeWeight(1);
         ellipse(pos.x, pos.y, SIZE, SIZE);
+    }
+    
+    protected void whenArrived() {
+        
     }
 
 }

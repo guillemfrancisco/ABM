@@ -26,6 +26,11 @@ public abstract class Facade {
     }
     
     
+    public Placeable getRandom() {
+        return items.get( (int) random(0, items.size() ) );
+    }
+    
+    
     public void draw() {
         for(Placeable item : items) item.draw();
     }
@@ -36,18 +41,18 @@ public abstract class Facade {
     }
 
     
-    public void loadFromJSON(String pathJSON) {
-        File file = new File( dataPath(pathJSON) );
+    public void loadFromJSON(String path) {
+        File file = new File( dataPath(path) );
         if( !file.exists() ) println("ERROR! JSON file does not exist");
         else items.addAll( fabric.loadFromJSON(file, ROADMAP) );
     
     }
     
     
-    public void loadFromCSV(String pathCSV) {
-        File file = new File( dataPath(pathCSV) );
-        if( !file.exists() ) println("ERROR! JSON file does not exist");
-        else items.addAll( fabric.loadFromCSV(pathCSV, ROADMAP) );
+    public void loadFromCSV(String path) {
+        File file = new File( dataPath(path) );
+        if( !file.exists() ) println("ERROR! CSV file does not exist");
+        else items.addAll( fabric.loadFromCSV(path, ROADMAP) );
     
     }
     
@@ -76,7 +81,7 @@ public abstract class Fabric {
         return count;
     }
     
-    public abstract ArrayList loadFromJSON(File JSONFile, Roads roads);
-    public abstract ArrayList loadFromCSV(String pathTSV, Roads roads);
+    public abstract ArrayList loadFromJSON(File file, Roads roads);
+    public abstract ArrayList loadFromCSV(String path, Roads roads);
     
 }

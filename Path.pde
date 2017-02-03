@@ -1,42 +1,59 @@
 public class Path {
 
+    private final Roads ROADMAP; 
+    
     private ArrayList<Lane> lanes = new ArrayList();
-    private float length = 0;
+    private float distance = 0;
     
     private Node inNode = null;
-    private Lane lane;
-    private int toVertex;
+    private Lane currentLane;
+    private PVector toVertex;
     
     private boolean arrived = false;
     
-    public Path() {}
+    public Path(Roads roadmap) {
+        ROADMAP = roadmap;
+    }
     
 
-    public boolean available() { return getLength() > 1; }
-    public int size() { return lanes.size(); }
-    public float getLength() { return length; }
-    public boolean hasArrived() { return arrived; }
+    public boolean available() {
+        return lanes.size() > 0;
+    }    
     
-    public Node inNode() { return inNode; }
+    public int size() {
+        return lanes.size();
+    }
+    
+    public float getLength() {
+        return distance;
+    }
+    
+    public boolean hasArrived() {
+        return arrived;
+    }
+    
+    public Node inNode() {
+        return inNode;
+    }
     
     public void nextLane() {
-        inNode = lane.getFinalNode();
-        int nextLane = lanes.indexOf(lane) + 1;
-        if( nextLane < lanes.size() ) {
-            lane = lanes.get(nextLane);
-            toVertex = 1;
+        inNode = currentLane.getFinalNode();
+        int i = lanes.indexOf(currentLane) + 1;
+        if( i < lanes.size() ) {
+            currentLane = lanes.get(i);
+            toVertex = currentLane.getVertex(1);
         } else arrived = true;
     }
     
     
     public PVector move(PVector pos, float speed) {
-        PVector vertex = lane.getVertex( toVertex );
-        PVector dir = PVector.sub(vertex, pos);
+        //PVector destVertex = currentLane.getVertex( toVertex );
+        PVector dir = PVector.sub(toVertex, pos);
         PVector movement = dir.copy().normalize().mult(speed);
         if(dir.mag() > movement.mag()) return movement;
         else {
-            if( lane.isLastVertex( vertex ) ) nextLane();
-            else toVertex++;
+            if( currentLane.isLastVertex( toVertex ) ) nextLane();
+            else toVertex = currentLane.nextVertex(toVertex);
             return dir;
         }
     }
@@ -52,11 +69,11 @@ public class Path {
     public void clear() {
         lanes = new ArrayList();
         inNode = null;
-        length = 0;
+        distance = 0;
         arrived = false;
         
-        lane = null;
-        toVertex = 0;
+        currentLane = null;
+        toVertex = null;
     }
     
     
@@ -66,14 +83,14 @@ public class Path {
             inNode = origin;
             ArrayList<Node> pathNodes = aStar(graph, origin, destination);
             for(int i = 1; i < pathNodes.size(); i++) {
-                Lane edge = pathNodes.get(i-1).shortestLaneTo(pathNodes.get(i));
-                lanes.add(edge);
-                length += edge.getLength();
+                Lane lane = pathNodes.get(i-1).shortestLaneTo(pathNodes.get(i));
+                lanes.add(lane);
+                distance += lane.getLength();
             }
             
             if(lanes.size() > 0) {
-                lane = lanes.get(0);
-                toVertex = 1;
+                currentLane = lanes.get(0);
+                toVertex = currentLane.getVertex(1);
             }
         }
     }

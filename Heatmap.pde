@@ -3,41 +3,39 @@ public enum Visibility { HIDE, SHOW, TOGGLE; }
 public class Heatmap {
     
     private String title = "TITLE";
-    private PVector position;
-    private int width,
-                height;
+    private final PVector POSITION;
+    private final int WIDTH, HEIGHT;
     
-    private PImage heatmap,
-                   heatmapBrush;
+    private PImage heatmap, heatmapBrush;
     private HashMap<String, PImage> gradients = new HashMap<String, PImage>();               
                    
     private float maxValue = 0;
     private boolean visible = false;
   
-    Heatmap(int x, int y, int width, int height) {
-        this.position = new PVector(x, y);
-        this.width = width;
-        this.height = height;
+    Heatmap(int x, int y, int _width, int _height) {
+        POSITION = new PVector(x, y);
+        WIDTH = _width;
+        HEIGHT = _height;
         
         // Default B/W gradient
-        PImage defaultGrad = createImage(255, 1, RGB);
-        defaultGrad.loadPixels();
-        for(int i = 0; i < defaultGrad.pixels.length; i++) defaultGrad.pixels[i] = color(i, i, i); 
-        defaultGrad.updatePixels();
-        gradients.put("default", defaultGrad);
+        PImage defaultGradient = createImage(255, 1, RGB);
+        //defaultGradient.loadPixels();
+        for(int i = 0; i < defaultGradient.pixels.length; i++) defaultGradient.pixels[i] = color(i, i, i); 
+        //defaultGradient.updatePixels();
+        gradients.put("default", defaultGradient);
         
     }
     
     
-    public void setBrush(String brush, int brushSize) {
-        heatmapBrush = loadImage(brush);
+    public void setBrush(String imagePath, int brushSize) {
+        heatmapBrush = loadImage(imagePath);
         heatmapBrush.resize(brushSize, brushSize);
     }
     
     
-    public void addGradient(String name, String path) {
-        File file = new File(dataPath(path));
-        if( file.exists() ) gradients.put(name, loadImage(path));
+    public void addGradient(String name, String imagePath) {
+        File file = new File(dataPath(imagePath));
+        if( file.exists() ) gradients.put(name, loadImage(imagePath));
     }
   
   
@@ -66,11 +64,11 @@ public class Heatmap {
     }
     
     
-    public void update(String title, ArrayList objects, String gradient) {
+    public void update(String _title, ArrayList objects, String gradient) {
         maxValue = 0;
-        this.title = title;
+        title = _title;
         if(visible) {
-            PImage gradientMap = createImage(width, height, ARGB);
+            PImage gradientMap = createImage(WIDTH, HEIGHT, ARGB);
             gradientMap.loadPixels();
             for(int i = 0; i < objects.size(); i++) {
                 Placeable obj = (Placeable) objects.get(i);
@@ -120,7 +118,7 @@ public class Heatmap {
         if(visible && heatmap != null) {
             pushStyle();
             blendMode(MULTIPLY);
-            image(heatmap, position.x, position.y);
+            image(heatmap, POSITION.x, POSITION.y);
             popStyle();
             // Legend
             //fill(#FFFFFF); noStroke(); textSize(10); textAlign(LEFT,BOTTOM);

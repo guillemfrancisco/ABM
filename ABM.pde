@@ -9,7 +9,8 @@ PointsOfInterest pois;
 
 Heatmap heatmap;
 
-//Path mousePath;
+Path debugPath;
+Node debugNode;
 
 boolean run = false;
 float speed = 0.5;
@@ -18,8 +19,8 @@ POI poi;
 
 void setup() {
     
-    //size(1200, 700, P2D);
-    fullScreen(P2D);
+    size(1200, 800, P2D);
+    //fullScreen(P2D);
     pixelDensity(2); // Reduce fps to half
     
     myFont = createFont("Montserrat-Light", 32);
@@ -31,7 +32,7 @@ void setup() {
     
     pois = new PointsOfInterest(this, roads);
     //pois.loadFromJSON("json/pois.json");
-    //pois.loadFromCSV("restaurants.tsv");
+    pois.loadFromCSV("restaurants.tsv");
     
     agents = new Agents(this, roads);
     agents.loadFromJSON("json/clusters.json");
@@ -41,7 +42,7 @@ void setup() {
     heatmap.addGradient("heat", "img/heatmap/heat.png");
     heatmap.addGradient("cool", "img/heatmap/cool.png");
     
-    //mousePath = new Path();
+    //debugPath = new Path(roads);
     
 }
 
@@ -52,54 +53,10 @@ void draw() {
     
     if(BG != null) image(BG, 0, 0);
     
-    roads.draw(1, #F0F3F5);
-    
     if(run) agents.move(speed);
-    agents.draw();
-    
+    roads.draw(1, #F0F3F5);
     pois.draw();
-    
-    /*
-    Edge lane = roads.closestLane( new PVector(mouseX, mouseY) );
-    PVector point = roads.closestPoint(lane, new PVector(mouseX, mouseY));
-    stroke(#FF0000, 50);
-    lane.draw(1, #FF0000);
-    line(mouseX, mouseY, point.x, point.y);
-    */
-    
-    /*
-    PVector point = roads.closestPoint(new PVector(mouseX, mouseY));
-    stroke(#FF0000, 50);
-    line(mouseX, mouseY, point.x, point.y);
-    */
-    
-    /*
-    Node endNode = roads.closestNode( new PVector(mouseX, mouseY) );
-    PVector endPos = endNode.getPosition();
-    PVector initPos = initNode.getPosition();
-    fill(#FF0000); noStroke();
-    ellipse(initPos.x, initPos.y, 7, 7);
-    stroke(#FF0000); noFill();
-    ellipse(endPos.x, endPos.y, 10, 10);
-    
-    stroke(#FF0000, 50);
-    line(mouseX, mouseY, endPos.x, endPos.y);
-    
-    mousePath.findPath( roads.getNodes(), initNode, endNode);
-    mousePath.draw(2, #FF0000);
-    
-    textAlign(LEFT, BOTTOM); fill(#550000);
-    text( roads.toMeters( mousePath.getLength() ), endPos.x, endPos.y - 5);
-    */
-    
-    /*
-    stroke(#FF0000);
-    //closest.draw(1, #FF0000);
-    //PVector closest = roads.getClosestLane( new PVector(mouseX, mouseY) );
-    PVector closest = roads.closestPoint( new PVector(mouseX, mouseY) );
-    line(mouseX, mouseY, closest.x, closest.y);
-    */
-    
+    agents.draw();
     heatmap.draw();
     
     fill(0);
@@ -109,6 +66,8 @@ void draw() {
     agents.printLegend(20, 70);
     pois.printLegend(200, 70);
     
+    
+    //if(debugPath.available()) debugPath.draw(2, #FF0000);
     
 }
 
@@ -152,5 +111,18 @@ void mouseClicked() {
     
     agents.select(mouseX, mouseY);
     pois.select(mouseX, mouseY);
+    roads.select(mouseX, mouseY);
     
+    /*
+    for(Node node : roads.nodes) {
+        if(node.selected) {
+            if(debugNode != null) {
+                debugPath.findPath(roads.nodes, debugNode, node);
+                debugNode = node;
+            }
+            else debugNode = node;
+            break;
+        }
+    }
+    */
 }
