@@ -11,6 +11,7 @@ public class Roads {
         
         boundaries = findBounds(file);
         
+        print("Loading roads network... ");
         JSONObject roadNetwork = loadJSONObject(file);
         JSONArray lanes = roadNetwork.getJSONArray("features");
         for(int i = 0; i < lanes.size(); i++) {
@@ -20,35 +21,29 @@ public class Roads {
             String type = props.isNull("type") ? "null" : props.getString("type");
             String name = props.isNull("name") ? "null" : props.getString("name");
             boolean oneWay = props.isNull("oneway") ? false : props.getInt("oneway") == 1 ? true : false;
-            //boolean oneWay = false;
       
             JSONArray points = lane.getJSONObject("geometry").getJSONArray("coordinates");
             
             Node prevNode = null;
-            Node currNode = null;
             ArrayList vertices = new ArrayList();
-            
             for(int j = 0; j < points.size(); j++) {
             
                 PVector point = toXY(points.getJSONArray(j).getFloat(1), points.getJSONArray(j).getFloat(0));
                 
                 vertices.add(point);
                 
-                currNode = createNodeIfVertex(point);
+                Node currNode = createNodeIfVertex(point);
                 if(currNode != null) {
-                    if(j > 0 && j < points.size()) {
-                        
+                    if(j > 0 && j < points.size()-1) {
                         if(oneWay) prevNode.connect(currNode, vertices, name);
                         else prevNode.connectBoth(currNode, vertices, name);
-                        
                         vertices = new ArrayList();
                         vertices.add(point);
                         prevNode = currNode;
                     }
                 } else currNode = new Node(point);
                 
-                
-                if(j == 0) {
+                if(prevNode == null) {
                     prevNode = currNode;
                     currNode.register(nodes);
                 } else if(j == points.size()-1) {
@@ -59,6 +54,9 @@ public class Roads {
                 
             }
         }
+        println("LOADED");
+
+        
     }
 
 
@@ -70,8 +68,8 @@ public class Roads {
                 else if( lane.contains(position) ) {
                     Lane laneBack = lane.findContrariwise();
                     Node newNode = new Node(position);
-                    if(lane.split(newNode)) {
-                        if(laneBack != null) laneBack.split(newNode);
+                    if(lane.divide(newNode)) {
+                        if(laneBack != null) laneBack.divide(newNode);
                         newNode.register(nodes);
                         return newNode;
                     }
@@ -82,16 +80,31 @@ public class Roads {
     }
 
 
+    private Node connect(PVector position) {
+        
+        Lane closestLane = findClosestLane(position);
+        Lane closestLaneBack = closestLane.findContrariwise();
+        
+        Node connectionNode = new Node(closestLane.findClosestPoint(position));
+        closestLane.split(connectionNode);
+        if(closestLaneBack != null) closestLaneBack.split(connectionNode);
+        connectionNode.register(nodes);
+            
+        Node node = new Node(position);
+        node.connectBoth(connectionNode, null, "Access");
+        node.register(nodes);
+        
+        return node;
+        
+    }
+
+
     public ArrayList<Node> getNodes() {
         return nodes;
     }
-    
-    public Node getFinalNode(int i) {
-        return nodes.get(i);
-    }
-    
+
     public Node randomNode() {
-        return nodes.get( (int) random(0, nodes.size()-1 ) );
+        return nodes.get( (int) random(0, nodes.size() ) );
     }
     
 
@@ -144,56 +157,28 @@ public class Roads {
     }
     
     
-    public PVector closestPoint(PVector pos) {
-        Lane closestLane = closestLane(pos);
-        return closestPoint(closestLane, pos);
+    public PVector findClosestPoint(PVector position) {
+        Lane closestLane = findClosestLane(position);
+        return closestLane.findClosestPoint(position);
     }
+
     
-    
-    public PVector closestPoint(Lane lane, PVector pos) {
-        float minDist = Float.MAX_VALUE;
-        PVector closest = null;
-        for(int i = 1; i < lane.size(); i++) {
-            PVector projPoint = Geometry.scalarProjection(pos, lane.getVertices().get(i-1), lane.getVertices().get(i));
-            float dist = PVector.dist(pos, projPoint);
-            if(dist < minDist) {
-                minDist = dist;
-                closest = projPoint;
-            }
-        }
-        return closest;
-    }
-    
-    
-    public Lane closestLane(PVector pos) {
-        float minDist = Float.MAX_VALUE;
-        Lane closest = null;
+    public Lane findClosestLane(PVector position) {
+        Float minDistance = Float.NaN;
+        Lane closestLane = null;
         for(Node node : nodes) {
             for(Lane lane : node.outboundLanes()) {
-                float dist = PVector.dist(pos, closestPoint(lane, pos));
-                if(dist < minDist) {
-                    minDist = dist;
-                    closest = lane;
+                PVector linePoint = lane.findClosestPoint(position);
+                float distance = position.dist(linePoint);
+                if(minDistance.isNaN() || distance < minDistance) {
+                    minDistance = distance;
+                    closestLane = lane;
                 }
             }
         }
-        return closest;
+        return closestLane;
     }
-    
-    
-    public Node closestNode(PVector pos) {
-        float minDist = Float.MAX_VALUE;
-        Node closest = null;
-        for(Node node : nodes) {
-            float dist = PVector.dist(pos, node.getPosition());
-            if(dist < minDist) {
-                minDist = dist;
-                closest = node;
-            }
-        }
-        return closest;
-    }
-    
+
     
     public void select(int mouseX, int mouseY) {
         for(Node node : nodes) node.select(mouseX, mouseY);
@@ -300,19 +285,8 @@ private class Node implements Placeable {
     }
     
     public void draw(int stroke, color c) {
-        
-        if(id == 172 || id == 38 || id == 273 ||id == 274 ||id == 8 ||id == 283 ||id == 651) {
-            stroke(#FF0000); strokeWeight(3);
-            point(pos.x, pos.y);
-        }
-        
         for(Lane lane : lanes) {
-            if(selected) {
-                lane.draw(2, #FF0000);
-                fill(0); textSize(8);
-                text(id, pos.x, pos.y);
-            }
-            else lane.draw(stroke, c);
+            lane.draw(stroke, c);
         }
     }
     
@@ -326,7 +300,7 @@ private class Node implements Placeable {
     
     
     public void select(int mouseX, int mouseY) {
-        selected = dist(pos.x, pos.y, mouseX, mouseY) < 5;
+        selected = dist(pos.x, pos.y, mouseX, mouseY) < 2;
     }
     
     
@@ -343,7 +317,7 @@ private class Lane implements Comparable<Lane> {
     
     private Node initNode;
     private Node finalNode;
-    private float length;
+    private float distance;
     private ArrayList<PVector> vertices;
     private boolean open = true;
     
@@ -360,7 +334,7 @@ private class Lane implements Comparable<Lane> {
             vertices.add(initNode.getPosition());
             vertices.add(finalNode.getPosition());
         }
-        length = computeLength();
+        distance = computeLength();
     }
     
     
@@ -377,7 +351,7 @@ private class Lane implements Comparable<Lane> {
         return dist;
     }
     
-    public float getLength() { return length; }
+    public float getLength() { return distance; }
     
     public boolean isOpen() { return open; }
    
@@ -387,6 +361,12 @@ private class Lane implements Comparable<Lane> {
         return vertices.indexOf(vertex) >= 0;
     }
 
+
+    public PVector nextVertex(PVector vertex) {
+        int i = vertices.indexOf(vertex) + 1;
+        if(i > 0 && i < vertices.size()) return vertices.get(i);
+        return null;
+    }
 
     public boolean isLastVertex( PVector vertex ) {
         return vertex.equals( vertices.get( vertices.size() - 1 ) );
@@ -408,30 +388,51 @@ private class Lane implements Comparable<Lane> {
     }
     
     
-    protected boolean split(Node node) {
+    public PVector findClosestPoint(PVector position) {
+        Float minDistance = Float.NaN;
+        PVector closestPoint = null;
+        for(int i = 1; i < vertices.size(); i++) {
+            PVector projectedPoint = Geometry.scalarProjection(position, vertices.get(i-1), vertices.get(i));
+            float distance = PVector.dist(position, projectedPoint);
+            if(minDistance.isNaN() || distance < minDistance) {
+                minDistance = distance;
+                closestPoint = projectedPoint;
+            }
+        }
+        return closestPoint;
+    }
+    
+    protected boolean divide(Node node) {
         int i = vertices.indexOf(node.getPosition());
         if(i > 0 && i < vertices.size()-1) {
-            ArrayList<PVector> splittedVertices = new ArrayList( vertices.subList(i, vertices.size()) );
-            node.connect(finalNode, splittedVertices, name);
+            ArrayList<PVector> dividedVertices = new ArrayList( vertices.subList(i, vertices.size()) );
+            node.connect(finalNode, dividedVertices, name);
             vertices = new ArrayList( vertices.subList(0, i+1) );
             finalNode = node;
-            length = computeLength();
+            distance = computeLength();
             return true;
         }
         return false;
     }
     
-    /*
-    protected Node break(PVector point) {
-        for(int i = 0; i < vertices.size() - 1; i++) {
-            if( Geometry.inLine(point, vertices.get(i), vertices.get(i+1)) ) {
-                Node newNode = new Node(point);
-                newNode.connect(finalNode, new ArrayList( vertices. ));
+    
+    protected Node split(Node node) {
+        for(int i = 1; i < vertices.size(); i++) {
+            if( Geometry.inLine(node.getPosition(), vertices.get(i-1), vertices.get(i)) ) {
+                
+                ArrayList<PVector> splittedVertices = new ArrayList();
+                splittedVertices.add(node.getPosition());
+                splittedVertices.addAll( vertices.subList(i, vertices.size()) );
+                node.connect(finalNode, splittedVertices, name);
+                
+                vertices = new ArrayList( vertices.subList(0, i) );
+                vertices.add(node.getPosition());
+                finalNode = node;
+                distance = computeLength();
             }
         }
         return null;
     }
-    */
     
     public void draw(int stroke, color c) {
         stroke(c); strokeWeight(stroke);
@@ -442,6 +443,11 @@ private class Lane implements Comparable<Lane> {
         }
     }
     
+    
+    @Override
+    public String toString() {
+        return name + " with " + vertices.size() + "vertices [" + vertices + "]";
+    }
     
     @Override
     public int compareTo(Lane s) {

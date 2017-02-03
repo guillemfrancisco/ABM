@@ -40,9 +40,11 @@ private class POIFabric extends Fabric {
                 int capacity        = item.getInt("capacity");
                 JSONArray languages = item.getJSONArray("languages");
                 
-                pois.add( new POI(roads, count, location, name, capacity, size) );
-                counter.increment(clusterName);
-                count++;
+                if( location.x > 0 && location.x < width && location.y > 0 && location.y < height ) {
+                    pois.add( new POI(roads, count, location, name, capacity) );
+                    counter.increment(clusterName);
+                    count++;
+                }
                 
             }
         }
@@ -51,12 +53,12 @@ private class POIFabric extends Fabric {
     }
       
      
-    public ArrayList<POI> loadFromCSV(String pathTSV, Roads roads) {
+    public ArrayList<POI> loadFromCSV(String path, Roads roads) {
          
         ArrayList<POI> pois = new ArrayList();
         int count = count();
         
-        Table table = loadTable(pathTSV, "header, tsv");
+        Table table = loadTable(path, "header, tsv");
         for(TableRow row : table.rows()) {
             
             String name         = row.getString("NAME");
@@ -64,9 +66,11 @@ private class POIFabric extends Fabric {
             int capacity        = row.getInt("CAPACITY");
             int size            = 3;
             
-            pois.add( new POI(roads, count, location, name, capacity, size) );
-            counter.increment(pathTSV); 
-            count++;
+            if( location.x > 0 && location.x < width && location.y > 0 && location.y < height ) {
+                pois.add( new POI(roads, count, location, name, capacity) );
+                counter.increment(path); 
+                count++;
+            }
         }
             
         return pois;
@@ -81,93 +85,51 @@ public class POI implements Placeable {
 
     private final int ID;
     private final String NAME;
-    private final int CAPACITY;
-    private final int MIN_SIZE;
-    
+    private final PVector POSITION;
     private final Node NODE;
-    private PVector conn;
-    private final PVector POS;
+    private final int CAPACITY;
     
     private int occupancy;
     private boolean selected;
     
     
-    public POI(Roads roadmap, int id, PVector pos, String name, int capacity, int minSize) {
+    public POI(Roads roadmap, int id, PVector position, String name, int capacity) {
         ID = id;
         NAME = name;
         CAPACITY = capacity;
-        MIN_SIZE = minSize;
-        
-        occupancy = round( random(0, CAPACITY) );
-        
-        POS = pos;
-        
-        NODE = null;
-        
-        // Connect poi to roadmap
-        //NODE = connect(roadmap, pos);
-        //conn = connect(roadmap, pos);
-        
+        NODE = roadmap.connect(position);
+        POSITION = position;
     }
     
     
     public PVector getPosition() {
-        return POS.copy();
+        return POSITION;
+    }
+    
+    public Node getNode() {
+        return NODE;
     }
     
     
     public void draw() {
-        float occup = (float)occupancy / CAPACITY;
-        color c = lerpColor(#FFFF00, #FF0000, occup);
-        float size = (1 + 10 * occup) * MIN_SIZE;
         
-        fill(c, 100); noStroke();
-        ellipse(POS.x, POS.y, size, size);
-        fill(c);
-        ellipse(POS.x, POS.y, MIN_SIZE, MIN_SIZE);
+        float normalizedOccupancy = (float)occupancy / CAPACITY;
+        color c = lerpColor(#FFFF00, #FF0000, normalizedOccupancy);
+        float size = (1 + 10 * normalizedOccupancy);
+        
+        stroke(c, 100); strokeWeight(2); noFill(); rectMode(CENTER);
+        rect(getPosition().x, getPosition().y, size, size);
+        point(POSITION.x, POSITION.y);
         
         if( selected ) {
             fill(0); textAlign(CENTER, BOTTOM);
-            text(NAME, POS.x, POS.y);
+            text(NAME, POSITION.x, POSITION.y);
         }
-        
-        //connPos = connectNode.getPosition();
-        //stroke(#FF0000);
-        //line(POS.x, POS.y, conn.x, conn.y);
+
     }
-    
-    
-    /*
-    private Node connect(Roads roadmap, PVector pos) {
-        Lane closeLane = roadmap.closestLane(pos);
-        Lane closeLaneBack = closeLane.getNode().laneTo( closeLane.getParentNode() );
-        PVector connectPoint = roadmap.closestPoint(closeLane, pos);
-        
-        // Check first node
-        Node connectNode = null;
-        if(connectPoint == closeLane.getNode().getPosition()) connectNode = closeLane.getNode();
-        else {
-            if(connectPoint == closeLane.getParentNode().getPosition()) connectNode = closeLane.getParentNode();
-            else {
-                connectNode = closeLane.split(connectPoint);
-                closeLaneBack.split(connectNode);
-            }
-        }
-        
-        Node node = new Node(pos);
-        connectNode.connectBoth(node, null, "POI access");
-        
-        if(connectNode.getID() == -1) {
-            connectNode.setID( roadmap.size() );
-            roadmap.add(connectNode);
-        }
-        
-        return node;
-    }
-    */
-    
+
     public void select(int mouseX, int mouseY) {
-        selected = dist(POS.x, POS.y, mouseX, mouseY) < MIN_SIZE;
+        selected = dist(POSITION.x, POSITION.y, mouseX, mouseY) < 5;
     }
     
 
