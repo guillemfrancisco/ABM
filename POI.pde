@@ -3,14 +3,14 @@ public class PointsOfInterest extends Facade {
 
     public PointsOfInterest(PApplet papplet, Roads roadmap) {
         super(papplet, roadmap);
-        fabric = new POIFabric();
+        factory = new POIFactory();
     }
     
 }
 
 
-// POI FABRIC -------------->
-private class POIFabric extends Fabric {
+// POI Factory -------------->
+private class POIFactory extends Factory {
     
     public ArrayList<POI> loadFromJSON(File JSONFile, Roads roads) {
         
@@ -48,13 +48,16 @@ private class POIFabric extends Fabric {
                 
             }
         }
-        
+
         return pois;
+        
     }
       
      
     public ArrayList<POI> loadFromCSV(String path, Roads roads) {
-         
+        
+        print("Loading POIs... ");
+        
         ArrayList<POI> pois = new ArrayList();
         int count = count();
         
@@ -72,7 +75,8 @@ private class POIFabric extends Fabric {
                 count++;
             }
         }
-            
+        
+        println("LOADED");
         return pois;
     }
      
@@ -89,7 +93,7 @@ public class POI implements Placeable {
     private final Node NODE;
     private final int CAPACITY;
     
-    private int occupancy;
+    private ArrayList<Agent> crowd = new ArrayList();
     private boolean selected;
     
     
@@ -106,16 +110,26 @@ public class POI implements Placeable {
         return POSITION;
     }
     
+    
     public Node getNode() {
         return NODE;
     }
     
     
+    public void host(Agent agent) {
+        if(!crowd.contains(agent)) crowd.add(agent);
+    }
+    
+    public void unhost(Agent agent) {
+        crowd.remove(agent);
+    }
+    
+    
     public void draw() {
         
-        float normalizedOccupancy = (float)occupancy / CAPACITY;
-        color c = lerpColor(#FFFF00, #FF0000, normalizedOccupancy);
-        float size = (1 + 10 * normalizedOccupancy);
+        float occupancy = (float)crowd.size() / CAPACITY;
+        color c = lerpColor(#FFFF00, #FF0000, occupancy);
+        float size = (5 + 10 * occupancy);
         
         stroke(c, 100); strokeWeight(2); noFill(); rectMode(CENTER);
         rect(getPosition().x, getPosition().y, size, size);
@@ -123,10 +137,11 @@ public class POI implements Placeable {
         
         if( selected ) {
             fill(0); textAlign(CENTER, BOTTOM);
-            text(NAME, POSITION.x, POSITION.y);
+            text(NAME, POSITION.x, POSITION.y + 20);
         }
 
     }
+
 
     public void select(int mouseX, int mouseY) {
         selected = dist(POSITION.x, POSITION.y, mouseX, mouseY) < 5;

@@ -1,6 +1,7 @@
 public class Path {
 
     private final Roads ROADMAP; 
+    private final Agent AGENT;
     
     private ArrayList<Lane> lanes = new ArrayList();
     private float distance = 0;
@@ -11,8 +12,9 @@ public class Path {
     
     private boolean arrived = false;
     
-    public Path(Roads roadmap) {
+    public Path(Roads roadmap, Agent agent) {
         ROADMAP = roadmap;
+        AGENT = agent;
     }
     
 
@@ -38,10 +40,12 @@ public class Path {
     
     public void nextLane() {
         inNode = currentLane.getFinalNode();
+        currentLane.removeAgent(AGENT);
         int i = lanes.indexOf(currentLane) + 1;
         if( i < lanes.size() ) {
             currentLane = lanes.get(i);
             toVertex = currentLane.getVertex(1);
+            currentLane.addAgent(AGENT);
         } else arrived = true;
     }
     
@@ -77,11 +81,14 @@ public class Path {
     }
     
     
-    public void findPath(ArrayList<Node> graph, Node origin, Node destination) {
+    public boolean findPath(Node origin, Node destination) {
         if(origin != null && destination != null) {
             clear();
             inNode = origin;
-            ArrayList<Node> pathNodes = aStar(graph, origin, destination);
+            ArrayList<Node> pathNodes = aStar(ROADMAP.getNodes(), origin, destination);
+            
+            if(pathNodes.size() == 0) return false;
+            
             for(int i = 1; i < pathNodes.size(); i++) {
                 Lane lane = pathNodes.get(i-1).shortestLaneTo(pathNodes.get(i));
                 lanes.add(lane);
@@ -92,7 +99,10 @@ public class Path {
                 currentLane = lanes.get(0);
                 toVertex = currentLane.getVertex(1);
             }
+            
+            return true;
         }
+        return false;
     }
     
     

@@ -8,7 +8,7 @@ public abstract class Facade {
     
     protected final PApplet PAPPLET;
     protected final Roads ROADMAP;
-    protected Fabric fabric;
+    protected Factory factory;
     protected ArrayList<Placeable> items = new ArrayList();
     
     public Facade(PApplet papplet, Roads roadmap) {
@@ -44,7 +44,7 @@ public abstract class Facade {
     public void loadFromJSON(String path) {
         File file = new File( dataPath(path) );
         if( !file.exists() ) println("ERROR! JSON file does not exist");
-        else items.addAll( fabric.loadFromJSON(file, ROADMAP) );
+        else items.addAll( factory.loadFromJSON(file, ROADMAP) );
     
     }
     
@@ -52,14 +52,14 @@ public abstract class Facade {
     public void loadFromCSV(String path) {
         File file = new File( dataPath(path) );
         if( !file.exists() ) println("ERROR! CSV file does not exist");
-        else items.addAll( fabric.loadFromCSV(path, ROADMAP) );
+        else items.addAll( factory.loadFromCSV(path, ROADMAP) );
     
     }
     
     
     public void printLegend(int x, int y) {
         String txt = "";
-        IntDict counter = fabric.getCounter();
+        IntDict counter = factory.getCounter();
         for(String name : counter.keyArray()) txt += name + ": " + counter.get(name) + "\n";
         text(txt, x, y);
     }
@@ -67,7 +67,7 @@ public abstract class Facade {
 }
 
 
-public abstract class Fabric {
+public abstract class Factory {
     
     protected IntDict counter = new IntDict();
     

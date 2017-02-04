@@ -19,20 +19,20 @@ POI poi;
 
 void setup() {
     
-    size(1200, 800, P2D);
+    size(1000, 851, P2D);
     //fullScreen(P2D);
     pixelDensity(2); // Reduce fps to half
     
     myFont = createFont("Montserrat-Light", 32);
     
-    //BG = loadImage("img/bg/wireframe.jpg");
+    //BG = loadImage("img/bg/ortoEPSG3857lowRes.jpg");
     //BG.resize(width, height);
     
-    roads = new Roads("json/roads_massive_simplified.geojson");
+    roads = new Roads("json/roads.geojson");
     
     pois = new PointsOfInterest(this, roads);
     //pois.loadFromJSON("json/pois.json");
-    pois.loadFromCSV("restaurants.tsv");
+    pois.loadFromCSV("restaurants_mini.tsv");
     
     agents = new Agents(this, roads);
     agents.loadFromJSON("json/clusters.json");
@@ -65,7 +65,6 @@ void draw() {
     
     agents.printLegend(20, 70);
     pois.printLegend(200, 70);
-    
     
     //if(debugPath.available()) debugPath.draw(2, #FF0000);
     
