@@ -21,22 +21,22 @@ public class Path {
     public boolean available() {
         return lanes.size() > 0;
     }    
-    
-    public int size() {
-        return lanes.size();
-    }
+
     
     public float getLength() {
         return distance;
     }
     
+    
     public boolean hasArrived() {
         return arrived;
     }
     
+    
     public Node inNode() {
         return inNode;
     }
+    
     
     public void nextLane() {
         inNode = currentLane.getFinalNode();
@@ -51,7 +51,6 @@ public class Path {
     
     
     public PVector move(PVector pos, float speed) {
-        //PVector destVertex = currentLane.getVertex( toVertex );
         PVector dir = PVector.sub(toVertex, pos);
         PVector movement = dir.copy().normalize().mult(speed);
         if(dir.mag() > movement.mag()) return movement;
@@ -70,7 +69,7 @@ public class Path {
     }
 
 
-    public void clear() {
+    public void reset() {
         lanes = new ArrayList();
         inNode = null;
         distance = 0;
@@ -83,55 +82,44 @@ public class Path {
     
     public boolean findPath(Node origin, Node destination) {
         if(origin != null && destination != null) {
-            clear();
+            reset();
             inNode = origin;
-            ArrayList<Node> pathNodes = aStar(ROADMAP.getNodes(), origin, destination);
-            
-            if(pathNodes.size() == 0) return false;
-            
-            for(int i = 1; i < pathNodes.size(); i++) {
-                Lane lane = pathNodes.get(i-1).shortestLaneTo(pathNodes.get(i));
-                lanes.add(lane);
-                distance += lane.getLength();
+            ArrayList<Node> pathNodes = aStar(origin, destination);
+            if(pathNodes.size() > 0) {
+                for(int i = 1; i < pathNodes.size(); i++) {
+                    Lane lane = pathNodes.get(i-1).shortestLaneTo(pathNodes.get(i));
+                    lanes.add(lane);
+                    distance += lane.getLength();
+                }
+                if(lanes.size() > 0) {
+                    currentLane = lanes.get(0);
+                    toVertex = currentLane.getVertex(1);
+                }
+                return true;
             }
-            
-            if(lanes.size() > 0) {
-                currentLane = lanes.get(0);
-                toVertex = currentLane.getVertex(1);
-            }
-            
-            return true;
         }
         return false;
     }
     
     
-    public ArrayList aStar(ArrayList<Node> nodes, Node origin, Node destination) {
-        ArrayList<Node> path = new ArrayList(); 
-        if(origin != destination) {
-            for(Node node : nodes) node.reset();
-            ArrayList<Node> open = new ArrayList();
+    private ArrayList<Node> aStar(Node origin, Node destination) {
+        ArrayList<Node> path = new ArrayList();
+        if(!origin.equals(destination)) {
+            for(Node node : ROADMAP.getNodes()) node.reset();
             ArrayList<Node> closed = new ArrayList();
+            PriorityQueue<Node> open = new PriorityQueue();
             open.add(origin);
             while(open.size() > 0) {
-                float lowestF = Float.MAX_VALUE;
-                Node currentNode = null;
-                for(Node node : open) {
-                    if(node.getF() < lowestF) {
-                        lowestF = node.getF();
-                        currentNode = node;
-                    }
-                }
-                open.remove(currentNode);
-                closed.add(currentNode);
-                if(currentNode == destination) break;
-                for(Lane lane : currentNode.outboundLanes()) {
+                Node currNode = open.poll();
+                closed.add(currNode);
+                if( currNode.equals(destination) ) break;
+                for(Lane lane : currNode.outboundLanes()) {
                     Node neighbor = lane.getFinalNode();
-                    if( !lane.isOpen() || closed.contains(neighbor)) continue;
+                    if( !lane.isOpen() || closed.contains(neighbor) ) continue;
                     boolean neighborOpen = open.contains(neighbor);
-                    float costToNeighbor = currentNode.getG() + lane.getLength();
+                    float costToNeighbor = currNode.getG() + lane.getLength();
                     if( costToNeighbor < neighbor.getG() || !neighborOpen ) {
-                        neighbor.setParent(currentNode); 
+                        neighbor.setParent(currNode); 
                         neighbor.setG(costToNeighbor);
                         neighbor.setF(destination);
                         if(!neighborOpen) open.add(neighbor);
@@ -139,7 +127,7 @@ public class Path {
                 }
             }
             path = retracePath(destination);
-        }
+        } else println("BOTH EQUALS");
         return path;
     }
     

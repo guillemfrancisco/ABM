@@ -1,4 +1,4 @@
-private class Node implements Placeable {
+private class Node implements Placeable, Comparable<Node> {
 
     private int id;
     protected PVector pos;
@@ -119,6 +119,11 @@ private class Node implements Placeable {
     
     public String toString() {
         return id + ": " + pos + " [" + lanes.size() + "]"; 
+    }
+    
+    
+    public int compareTo(Node node) {
+        return f < node.getF() ? -1 : f == node.getF() ? 0 : 1;
     }
     
 }
