@@ -1,9 +1,3 @@
-public interface Placeable {
-    public PVector getPosition();
-    public void select(int mouseX, int mouseY);
-    public void draw();
-}
-
 public abstract class Facade {
     
     protected final PApplet PAPPLET;
@@ -21,13 +15,24 @@ public abstract class Facade {
     }
     
     
-    public ArrayList getItems() {
+    public <T> ArrayList<T> filter(Predicate<T> predicate) {
+        ArrayList<T> result = new ArrayList();
+        for(int i = 0; i < items.size(); i++) {
+            T item = (T) items.get(i);
+            if(predicate.evaluate(item)) result.add(item);
+        }
+        return result;
+    }
+    
+    
+    public ArrayList getAll() {
         return items;
     }
     
     
     public Placeable getRandom() {
-        return items.get( (int) random(0, items.size() ) );
+        int i = round(random(0, items.size()-1));
+        return items.get(i);
     }
     
     

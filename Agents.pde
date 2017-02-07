@@ -1,13 +1,30 @@
 // AGENTS FACADE --------------->
 public class Agents extends Facade {
     
+    private float speed;
+    private float maxSpeed = 5; 
+    
     public Agents(PApplet papplet, Roads roads) {
         super(papplet, roads);
         factory = new AgentFactory();
     }
 
     
-    public void move(float speed) {
+    public void setSpeed(float _speed, float _maxSpeed) {
+        maxSpeed = _maxSpeed;
+        speed = constrain(_speed, 0, maxSpeed);
+    }
+    
+    public void changeSpeed(float inc) {
+        speed = constrain(speed + inc, 0, maxSpeed);
+    }
+    
+    public float getSpeed() {
+        return speed;
+    }
+
+    
+    public void move() {
         for(Placeable item : items) {
             Agent agent = (Agent) item;
             agent.move(speed);
@@ -73,8 +90,8 @@ public abstract class Agent implements Placeable {
     
     protected int explodeSize = 0;
     
-    protected boolean arrived = false;
     protected boolean selected = false;
+    protected boolean arrived = false;
     protected boolean panicMode = false;
     
     protected POI destination;
@@ -96,6 +113,11 @@ public abstract class Agent implements Placeable {
     }
     
     
+    public int getID() {
+        return ID;
+    }
+    
+    
     public PVector getPosition() {
         return pos.copy();
     }
@@ -111,7 +133,6 @@ public abstract class Agent implements Placeable {
     
     
     public void move(float speed) {
-        
         if(destination != null) {
             if(!path.available()) panicMode = !path.findPath(inNode, destination.getNode());
             else {
@@ -125,13 +146,12 @@ public abstract class Agent implements Placeable {
                 }
             }
         } else whenArrived();
-        
     }
     
     public void select(int mouseX, int mouseY) {
         selected = dist(mouseX, mouseY, pos.x, pos.y) < SIZE;
         if(selected) {
-            println("Agent " + ID + " GOING FROM " + inNode.id + " TO " + destination.getNode().id);
+            println(this);
         }
     }
     
@@ -144,6 +164,12 @@ public abstract class Agent implements Placeable {
     
     public abstract void draw();
     protected abstract void whenArrived();
+    
+    
+    public String toString() {
+        String goingTo = destination != null ? "GOING FROM " + inNode.getID() + " TO " + str(destination.getNode().getID()) : "ARRIVED";
+        return "AGENT " + ID + " " + goingTo;
+    }
     
 }
 

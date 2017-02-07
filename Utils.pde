@@ -18,3 +18,11 @@ public static class Geometry {
     }
     
 }
+
+
+Predicate<Agent> closeToCenter = new Predicate<Agent>() {
+    public boolean evaluate(Agent agent) {
+        PVector center = new PVector(width/2, height/2);
+        return center.dist(agent.getPosition()) < 200;
+    }
+};

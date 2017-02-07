@@ -16,6 +16,10 @@ private class Node implements Placeable {
         pos = _pos;
     }
     
+    public int getID() {
+        return id;
+    }
+    
     public void register(ArrayList<Node> nodes) {
         if(id == -1) {
             id = nodes.size();
