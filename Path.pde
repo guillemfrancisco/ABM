@@ -23,6 +23,13 @@ public class Path {
     }    
 
     
+    private float computeLength() {
+        float distance = 0;
+        for(Lane lane : lanes) distance += lane.getLength();
+        return distance;
+    }
+    
+    
     public float getLength() {
         return distance;
     }
@@ -35,6 +42,13 @@ public class Path {
     
     public Node inNode() {
         return inNode;
+    }
+    
+    
+    public void reset() {
+        lanes = new ArrayList();
+        currentLane = null;
+        distance = 0;
     }
     
     
@@ -67,34 +81,16 @@ public class Path {
             lane.draw(stroke, c);
         }
     }
-
-
-    public void reset() {
-        lanes = new ArrayList();
-        inNode = null;
-        distance = 0;
-        arrived = false;
-        
-        currentLane = null;
-        toVertex = null;
-    }
-    
     
     public boolean findPath(Node origin, Node destination) {
         if(origin != null && destination != null) {
-            reset();
-            inNode = origin;
-            ArrayList<Node> pathNodes = aStar(origin, destination);
-            if(pathNodes.size() > 0) {
-                for(int i = 1; i < pathNodes.size(); i++) {
-                    Lane lane = pathNodes.get(i-1).shortestLaneTo(pathNodes.get(i));
-                    lanes.add(lane);
-                    distance += lane.getLength();
-                }
-                if(lanes.size() > 0) {
-                    currentLane = lanes.get(0);
-                    toVertex = currentLane.getVertex(1);
-                }
+            lanes = aStar(origin, destination);
+            if(lanes.size() > 0) {
+                distance = computeLength();
+                inNode = origin;
+                currentLane = lanes.get(0);
+                toVertex = currentLane.getVertex(1);
+                arrived = false;
                 return true;
             }
         }
@@ -102,8 +98,8 @@ public class Path {
     }
     
     
-    private ArrayList<Node> aStar(Node origin, Node destination) {
-        ArrayList<Node> path = new ArrayList();
+    private ArrayList<Lane> aStar(Node origin, Node destination) {
+        ArrayList<Lane> path = new ArrayList();
         if(!origin.equals(destination)) {
             for(Node node : ROADMAP.getNodes()) node.reset();
             ArrayList<Node> closed = new ArrayList();
@@ -126,23 +122,22 @@ public class Path {
                     }
                 }
             }
-            path = retracePath(destination);
-        } else println("BOTH EQUALS");
+            path = tracePath(destination);
+        }
         return path;
     }
     
     
-    private ArrayList<Node> retracePath(Node destination) {
-        ArrayList<Node> path = new ArrayList();
+    private ArrayList<Lane> tracePath(Node destination) {
+        ArrayList<Lane> path = new ArrayList();
         Node pathNode = destination;
-        while(pathNode != null) {
-          path.add(pathNode);
-          pathNode = pathNode.getParent();
+        while(pathNode.getParent() != null) {
+            path.add( pathNode.getParent().shortestLaneTo(pathNode) );
+            pathNode = pathNode.getParent();
         }
         Collections.reverse(path);
         return path;
     }
-    
     
     
 }
