@@ -125,7 +125,9 @@ public abstract class Agent implements Placeable {
     
     public POI findDestination() {
         POI newDestination = null;
-        while(newDestination == null || inNode.equals(newDestination.getNode())) {
+        arrived = false;
+        path.reset();
+        while(newDestination == null || newDestination.equals(destination)) {
             newDestination = (POI)pois.getRandom();
         }
         return newDestination;
@@ -133,20 +135,23 @@ public abstract class Agent implements Placeable {
     
     
     public void move(float speed) {
-        if(destination != null) {
-            if(!path.available()) panicMode = !path.findPath(inNode, destination.getNode());
+        if(!arrived) {
+            if(!path.available()) path.findPath(inNode, destination.getNode());
             else {
                 PVector movement = path.move(pos, speed);
                 pos.add( movement );
                 distTraveled += movement.mag();
                 inNode = path.inNode();
                 if(path.hasArrived()) {
-                    destination.host(this);
-                    destination = null;
+                    arrived = true;
+                    if(!destination.host(this)) {
+                        destination = findDestination();
+                    }
                 }
             }
         } else whenArrived();
     }
+    
     
     public void select(int mouseX, int mouseY) {
         selected = dist(mouseX, mouseY, pos.x, pos.y) < SIZE;
@@ -167,7 +172,7 @@ public abstract class Agent implements Placeable {
     
     
     public String toString() {
-        String goingTo = destination != null ? "GOING FROM " + inNode.getID() + " TO " + str(destination.getNode().getID()) : "ARRIVED";
+        String goingTo = destination != null ? "GOING TO " + destination : "ARRIVED";
         return "AGENT " + ID + " " + goingTo;
     }
     
@@ -181,11 +186,14 @@ private class Person extends Agent {
         super(id, map, size, hexColor);
     }
     
+    
     public void draw() {
         if(selected) {
             path.draw(1, COLOR);
             fill(COLOR, 75); noStroke();
             ellipse(pos.x, pos.y, 4 * SIZE, 4 * SIZE);
+            //fill(0);
+            //text(round(distTraveled) + "/" + round(path.getLength()), pos.x, pos.y);
         }
         
         if(panicMode) drawPanic();
@@ -194,13 +202,15 @@ private class Person extends Agent {
         ellipse(pos.x, pos.y, SIZE, SIZE);
     }
 
+
     protected void whenArrived() {
         wander();
         //destination = findDestination();
     }
 
+
     private void wander() {
-        pos = inNode.getPosition().add( PVector.random2D().mult(2) );
+        pos = inNode.getPosition().add( PVector.random2D().mult( random(0, 5)) );
     }
 
 }
@@ -223,6 +233,7 @@ private class Car extends Agent {
         noFill(); stroke(COLOR); strokeWeight(1);
         ellipse(pos.x, pos.y, SIZE, SIZE);
     }
+    
     
     protected void whenArrived() {
         //destination = findDestination();

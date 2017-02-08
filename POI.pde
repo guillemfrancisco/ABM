@@ -94,6 +94,7 @@ public class POI implements Placeable {
     private final int CAPACITY;
     
     private ArrayList<Agent> crowd = new ArrayList();
+    private float occupancy;
     private boolean selected;
     
     
@@ -116,19 +117,24 @@ public class POI implements Placeable {
     }
     
     
-    public void host(Agent agent) {
-        if(!crowd.contains(agent)) crowd.add(agent);
+    public boolean host(Agent agent) {
+        if(crowd.size() < CAPACITY) {
+            crowd.add(agent);
+            occupancy = (float)crowd.size() / CAPACITY;
+            return true;
+        }
+        return false;
     }
     
     public void unhost(Agent agent) {
         crowd.remove(agent);
+        occupancy = (float)crowd.size() / CAPACITY;
     }
     
     
     public void draw() {
         
-        float occupancy = (float)crowd.size() / CAPACITY;
-        color c = lerpColor(#FFFF00, #FF0000, occupancy);
+        color c = lerpColor(#00FF00, #FF0000, occupancy);
         float size = (5 + 10 * occupancy);
         
         stroke(c, 100); strokeWeight(2); noFill(); rectMode(CENTER);
@@ -137,7 +143,7 @@ public class POI implements Placeable {
         
         if( selected ) {
             fill(0); textAlign(CENTER, BOTTOM);
-            text(NAME, POSITION.x, POSITION.y + 20);
+            text(this.toString(), POSITION.x, POSITION.y + 20);
         }
 
     }
@@ -145,6 +151,11 @@ public class POI implements Placeable {
 
     public void select(int mouseX, int mouseY) {
         selected = dist(POSITION.x, POSITION.y, mouseX, mouseY) < 5;
+    }
+    
+    
+    public String toString() {
+        return NAME + " [" + crowd.size() + " / " + CAPACITY + "]";
     }
     
 
