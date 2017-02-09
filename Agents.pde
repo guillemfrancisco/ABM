@@ -207,6 +207,9 @@ private class Person extends Agent {
         }
         
         if(panicMode) drawPanic();
+            PVector destPos = destination.getPosition();
+            stroke(#FF0000, 100); strokeWeight(1);
+            line(pos.x, pos.y, destPos.x, destPos.y);
         
         fill(COLOR); noStroke();
         ellipse(pos.x, pos.y, SIZE, SIZE);
