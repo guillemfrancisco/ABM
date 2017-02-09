@@ -10,8 +10,13 @@ public abstract class Facade {
         ROADMAP = roadmap;
     }
     
+    
     public int count() {
         return items.size();
+    }
+    
+    public <T> int count(Predicate<T> predicate) {
+        return filter(predicate).size();
     }
     
     

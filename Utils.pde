@@ -20,9 +20,24 @@ public static class Geometry {
 }
 
 
-Predicate<Agent> closeToCenter = new Predicate<Agent>() {
-    public boolean evaluate(Agent agent) {
-        PVector center = new PVector(width/2, height/2);
-        return center.dist(agent.getPosition()) < 200;
+
+public static class Filters {
+
+    public static Predicate<Agent> closeToPoint(final PVector point) {
+        return new Predicate<Agent>() {
+            public boolean evaluate(Agent item) {
+                return point.dist(item.getPosition()) < 100;
+            }
+        };
     }
-};
+    
+    public static Predicate<Agent> isMoving(final boolean moving) {
+        return new Predicate<Agent>() {
+            public boolean evaluate(Agent agent) {
+                return agent.isMoving() == moving;
+            }
+        };
+    }
+    
+    
+}

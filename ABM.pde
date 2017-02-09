@@ -29,13 +29,13 @@ void setup() {
     
     roads = new Roads("json/roads.geojson");
     
-    pois = new PointsOfInterest(this, roads);
+    pois = new PointsOfInterest(roads);
     //pois.loadFromJSON("json/pois.json");
     pois.loadFromCSV("restaurants_mini.tsv");
     
-    agents = new Agents(this, roads);
-    agents.setSpeed(0.1, 5);
+    agents = new Agents(roads);
     agents.loadFromJSON("json/clusters.json");
+    agents.setSpeed(0.1, 5);
     
     heatmap = new Heatmap(0, 0, width, height);
     heatmap.setBrush("img/heatmap/brush_80x80.png", 80);
@@ -64,18 +64,22 @@ void draw() {
     text("Agents: " + agents.count() + "\nSpeed: " + (run ? agents.getSpeed() : "[PAUSED]") + "\nFramerate: " + round(frameRate) + "fps", 20, 20);
     
     agents.printLegend(20, 70);
-    pois.printLegend(200, 70);
     
     //if(debugPath.available()) debugPath.draw(2, #FF0000);
     
     /*
-    ArrayList<Agent> farAgents = agents.filter(closeToCenter);
-    for(Agent agent : farAgents) {
-        stroke(#FF0000);
+    PVector mousePoint = new PVector(mouseX, mouseY);
+    ArrayList<Agent> mouseAgents = agents.filter(Filters.closeToPoint(mousePoint));
+    for(Agent agent : mouseAgents) {
         PVector pos = agent.getPosition();
-        line(width/2, height/2, pos.x, pos.y);
+        stroke(#FF0000);
+        line(mousePoint.x, mousePoint.y, pos.x, pos.y);
     }
     */
+    
+    fill(0);
+    text("Agents moving: " + agents.count(Filters.isMoving(false)), 20, 200);
+    
 }
 
 
