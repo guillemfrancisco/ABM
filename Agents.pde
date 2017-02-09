@@ -4,8 +4,8 @@ public class Agents extends Facade {
     private float speed;
     private float maxSpeed = 5; 
     
-    public Agents(PApplet papplet, Roads roads) {
-        super(papplet, roads);
+    public Agents(Roads roads) {
+        super(roads);
         factory = new AgentFactory();
     }
 
@@ -23,7 +23,6 @@ public class Agents extends Facade {
         return speed;
     }
 
-    
     public void move() {
         for(Placeable item : items) {
             Agent agent = (Agent) item;
@@ -74,7 +73,7 @@ private class AgentFactory extends Factory {
     }
     
     
-    public ArrayList<Agent> loadFromCSV(String path, Roads roadmap) {
+    public ArrayList<Agent> loadFromCSV(String path, Roads roads) {
         return null;
     }
     
@@ -101,15 +100,15 @@ public abstract class Agent implements Placeable {
     protected float distTraveled;
     
     
-    public Agent(int id, Roads map, int size, String hexColor) {
+    public Agent(int id, Roads roads, int size, String hexColor) {
         ID = id;
         SIZE = size;
         COLOR = unhex( "FF" + hexColor.substring(1) );
 
-        path = new Path(map, this);    
-        inNode = map.randomNode();
-        pos = inNode.getPosition();
+        path = new Path(this, roads);
+        place(roads);
         destination = findDestination();
+        
     }
     
     
@@ -127,7 +126,7 @@ public abstract class Agent implements Placeable {
         POI newDestination = null;
         arrived = false;
         path.reset();
-        while(newDestination == null || newDestination.equals(destination)) {
+        while(newDestination == null || inNode.equals(newDestination.getNode())) {
             newDestination = (POI)pois.getRandom();
         }
         return newDestination;
@@ -136,7 +135,7 @@ public abstract class Agent implements Placeable {
     
     public void move(float speed) {
         if(!arrived) {
-            if(!path.available()) path.findPath(inNode, destination.getNode());
+            if(!path.available()) panicMode = !path.findPath(inNode, destination.getNode());
             else {
                 PVector movement = path.move(pos, speed);
                 pos.add( movement );
@@ -150,6 +149,11 @@ public abstract class Agent implements Placeable {
                 }
             }
         } else whenArrived();
+    }
+    
+    
+    public boolean isMoving() {
+        return !arrived;
     }
     
     
@@ -172,7 +176,7 @@ public abstract class Agent implements Placeable {
     
     
     public String toString() {
-        String goingTo = destination != null ? "GOING TO " + destination : "ARRIVED";
+        String goingTo = destination != null ? "GOING TO " + destination + " THROUGH " + path.toString() : "ARRIVED";
         return "AGENT " + ID + " " + goingTo;
     }
     
@@ -184,6 +188,12 @@ private class Person extends Agent {
 
     public Person(int id, Roads map, int size, String hexColor) {
         super(id, map, size, hexColor);
+    }
+    
+    
+    public void place(Roads roads) {
+        inNode = roads.randomNode();
+        pos = inNode.getPosition();
     }
     
     
@@ -221,6 +231,12 @@ private class Car extends Agent {
 
     public Car(int id, Roads map, int size, String hexColor) {
         super(id, map, size, hexColor);
+    }
+    
+    
+    public void place(Roads roads) {
+        inNode = roads.randomNode();
+        pos = inNode.getPosition();
     }
     
     

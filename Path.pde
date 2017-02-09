@@ -140,4 +140,12 @@ public class Path {
     }
     
     
+    public String toString() {
+        String str = lanes.size() + " LANES: ";
+        for(Lane lane : lanes) {
+            str += lane.toString() + ", ";
+        }
+        return str;
+    }
+    
 }

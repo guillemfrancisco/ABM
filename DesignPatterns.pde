@@ -1,12 +1,10 @@
 public abstract class Facade {
     
-    protected final PApplet PAPPLET;
     protected final Roads ROADMAP;
     protected Factory factory;
     protected ArrayList<Placeable> items = new ArrayList();
     
-    public Facade(PApplet papplet, Roads roadmap) {
-        PAPPLET = papplet;
+    public Facade(Roads roadmap) {
         ROADMAP = roadmap;
     }
     

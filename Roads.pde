@@ -45,11 +45,11 @@ public class Roads {
                 
                 if(prevNode == null) {
                     prevNode = currNode;
-                    currNode.register(nodes);
+                    currNode.place(this);
                 } else if(j == points.size()-1) {
                     if(oneWay) prevNode.connect(currNode, vertices, name);
                     else prevNode.connectBoth(currNode, vertices, name);
-                    currNode.register(nodes);
+                    currNode.place(this);
                 }
                 
             }
@@ -80,7 +80,7 @@ public class Roads {
                     Node newNode = new Node(position);
                     if(lane.divide(newNode)) {
                         if(laneBack != null) laneBack.divide(newNode);
-                        newNode.register(nodes);
+                        newNode.place(this);
                         return newNode;
                     }
                 }
@@ -98,18 +98,18 @@ public class Roads {
         Node connectionNode = new Node(closestLane.findClosestPoint(position));
         closestLane.split(connectionNode);
         if(closestLaneBack != null) closestLaneBack.split(connectionNode);
-        connectionNode.register(nodes);
+        connectionNode.place(this);
             
         Node node = new Node(position);
         node.connectBoth(connectionNode, null, "Access");
-        node.register(nodes);
+        node.place(this);
         
         return node;
         
     }
 
 
-    public ArrayList<Node> getNodes() {
+    public ArrayList<Node> getAll() {
         return nodes;
     }
 

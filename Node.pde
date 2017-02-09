@@ -1,7 +1,7 @@
 private class Node implements Placeable, Comparable<Node> {
 
     private int id;
-    protected PVector pos;
+    protected PVector position;
     private ArrayList<Lane> lanes = new ArrayList();
     private boolean selected;
     
@@ -11,24 +11,25 @@ private class Node implements Placeable, Comparable<Node> {
     private float g;
     private float h;
     
-    public Node(PVector _pos) {
+    public Node(PVector _position) {
         id = -1;
-        pos = _pos;
+        position = _position;
     }
     
     public int getID() {
         return id;
     }
     
-    public void register(ArrayList<Node> nodes) {
+    public void place(Roads roads) {
+        
         if(id == -1) {
-            id = nodes.size();
-            nodes.add(this);
+            id = roads.getAll().size();
+            roads.getAll().add(this);
         }
     }
     
     public PVector getPosition() {
-        return pos.copy();
+        return position.copy();
     }
     
     public ArrayList<Lane> outboundLanes() {
@@ -70,7 +71,7 @@ private class Node implements Placeable, Comparable<Node> {
     public void setG(float _g) { g = _g; }
     public float getG() { return g; }
     public void setF(Node destination) {
-        h =  pos.dist(destination.getPosition());
+        h =  position.dist(destination.getPosition());
         f = g + h;
     }
     public float getF() { return f; }
@@ -94,7 +95,7 @@ private class Node implements Placeable, Comparable<Node> {
     
     public void draw() {
         stroke(#000000);
-        point(pos.x, pos.y);
+        point(position.x, position.y);
     }
     
     public void draw(int stroke, color c) {
@@ -113,12 +114,12 @@ private class Node implements Placeable, Comparable<Node> {
     
     
     public void select(int mouseX, int mouseY) {
-        selected = dist(pos.x, pos.y, mouseX, mouseY) < 2;
+        selected = dist(position.x, position.y, mouseX, mouseY) < 2;
     }
     
     
     public String toString() {
-        return id + ": " + pos + " [" + lanes.size() + "]"; 
+        return id + ": " + position + " [" + lanes.size() + "]"; 
     }
     
     

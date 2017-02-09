@@ -1,8 +1,8 @@
 // POI FACADE -------------->
 public class PointsOfInterest extends Facade {
 
-    public PointsOfInterest(PApplet papplet, Roads roadmap) {
-        super(papplet, roadmap);
+    public PointsOfInterest(Roads roadmap) {
+        super(roadmap);
         factory = new POIFactory();
     }
     
@@ -90,21 +90,26 @@ public class POI implements Placeable {
     private final int ID;
     private final String NAME;
     private final PVector POSITION;
-    private final Node NODE;
     private final int CAPACITY;
+    private Node NODE;
     
     private ArrayList<Agent> crowd = new ArrayList();
     private float occupancy;
     private boolean selected;
     
     
-    public POI(Roads roadmap, int id, PVector position, String name, int capacity) {
+    public POI(Roads roads, int id, PVector position, String name, int capacity) {
         ID = id;
         NAME = name;
         CAPACITY = capacity;
-        NODE = roadmap.connect(position);
         POSITION = position;
+        place(roads);
     }
+    
+    
+    public void place(Roads roads) {
+        NODE = roads.connect(POSITION);
+    } 
     
     
     public PVector getPosition() {

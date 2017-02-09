@@ -111,7 +111,7 @@ void keyPressed() {
             
         case 'n':
             heatmap.visible(Visibility.TOGGLE);
-            heatmap.update("Nodes Density", roads.getNodes(), "cool");
+            heatmap.update("Nodes Density", roads.getAll(), "cool");
             break;
     }
     
