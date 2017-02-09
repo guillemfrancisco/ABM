@@ -97,6 +97,8 @@ public class POI implements Placeable {
     private float occupancy;
     private boolean selected;
     
+    private float size;
+    
     
     public POI(Roads roads, int id, PVector position, String name, int capacity) {
         ID = id;
@@ -122,10 +124,16 @@ public class POI implements Placeable {
     }
     
     
+    public float getSize() {
+        return size;
+    }
+    
+    
     public boolean host(Agent agent) {
         if(crowd.size() < CAPACITY) {
             crowd.add(agent);
             occupancy = (float)crowd.size() / CAPACITY;
+            size = (5 + 10 * occupancy);
             return true;
         }
         return false;
@@ -134,28 +142,28 @@ public class POI implements Placeable {
     public void unhost(Agent agent) {
         crowd.remove(agent);
         occupancy = (float)crowd.size() / CAPACITY;
+        size = (2 + 20 * occupancy);
     }
     
     
     public void draw() {
         
-        color c = lerpColor(#00FF00, #FF0000, occupancy);
+        color c = lerpColor(#77DD77, #FF6666, occupancy);
         float size = (5 + 10 * occupancy);
         
-        stroke(c, 100); strokeWeight(2); noFill(); rectMode(CENTER);
+        stroke(c); strokeWeight(2); noFill(); rectMode(CENTER);
         rect(getPosition().x, getPosition().y, size, size);
-        point(POSITION.x, POSITION.y);
         
         if( selected ) {
             fill(0); textAlign(CENTER, BOTTOM);
-            text(this.toString(), POSITION.x, POSITION.y + 20);
+            text(this.toString(), POSITION.x, POSITION.y - size / 2);
         }
 
     }
 
 
     public void select(int mouseX, int mouseY) {
-        selected = dist(POSITION.x, POSITION.y, mouseX, mouseY) < 5;
+        selected = dist(POSITION.x, POSITION.y, mouseX, mouseY) <= size;
     }
     
     
