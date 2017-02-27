@@ -1,7 +1,16 @@
-// POI FACADE -------------->
-public class PointsOfInterest extends Facade {
+/**
+* POIs - Facade to simplify manipulation of Pois of Interest in simulation
+* @author        Marc Vilella
+* @version       1.0
+* @see           Facade
+*/
+public class POIs extends Facade {
 
-    public PointsOfInterest(Roads roadmap) {
+    /**
+    * Initiate pois of interest facade and agents' Factory
+    * @param roads  Roadmap where agents will be placed and move
+    */
+    public POIs(Roads roadmap) {
         super(roadmap);
         factory = new POIFactory();
     }
@@ -9,11 +18,21 @@ public class PointsOfInterest extends Facade {
 }
 
 
-// POI Factory -------------->
+
+/**
+* POIFactory - Factory to generate diferent Points of Interest from diferent sources 
+* @author        Marc Vilella
+* @version       1.0
+* @see           Factory
+*/
 private class POIFactory extends Factory {
     
-    public ArrayList<POI> loadFromJSON(File JSONFile, Roads roads) {
+    /**
+    * Load POIs form JSON file
+    */
+    public ArrayList<POI> loadJSON(File JSONFile, Roads roads) {
         
+        print("Loading POIs... ");
         ArrayList<POI> pois = new ArrayList();
         int count = count();
         
@@ -34,8 +53,8 @@ private class POIFactory extends Factory {
                 int id              = item.getInt("id");
                 String name         = item.getString("name");
                 PVector location    = roads.toXY(
-                                        item.getJSONArray("location").getFloat(0),
-                                        item.getJSONArray("location").getFloat(1)
+                                        item.getJSONArray("location").getFloat(1),
+                                        item.getJSONArray("location").getFloat(0)
                                     );
                 int capacity        = item.getInt("capacity");
                 JSONArray languages = item.getJSONArray("languages");
@@ -48,16 +67,17 @@ private class POIFactory extends Factory {
                 
             }
         }
-
-        return pois;
-        
+        println("LOADED");
+        return pois;  
     }
       
-     
-    public ArrayList<POI> loadFromCSV(String path, Roads roads) {
+    
+    /**
+    * Load POIs form CSV file
+    */
+    public ArrayList<POI> loadCSV(String path, Roads roads) {
         
         print("Loading POIs... ");
-        
         ArrayList<POI> pois = new ArrayList();
         int count = count();
         
@@ -75,7 +95,6 @@ private class POIFactory extends Factory {
                 count++;
             }
         }
-        
         println("LOADED");
         return pois;
     }
@@ -84,7 +103,11 @@ private class POIFactory extends Factory {
 
 
 
-// POI CLASSES -------------->
+/**
+* POI -  Abstract class describing a Point of Interest, that is a destination for agents in simulation
+* @author        Marc Vilella
+* @version       2.0
+*/
 public class POI implements Placeable {
 
     private final int ID;
@@ -97,9 +120,17 @@ public class POI implements Placeable {
     private float occupancy;
     private boolean selected;
     
-    private float size;
+    private float size = 2;
     
     
+    /**
+    * Initiate POI with specific name and capacity, and places it in the roadmap
+    * @param roads  Roadmap to place the POI
+    * @param id  ID of the POI
+    * @param position  Position of the POI
+    * @param name  name of the POI
+    * @param capacity  Customers capacity of the POI
+    */
     public POI(Roads roads, int id, PVector position, String name, int capacity) {
         ID = id;
         NAME = name;
@@ -109,50 +140,85 @@ public class POI implements Placeable {
     }
     
     
+    /**
+    * Create a node in the roadmap linked to the POI and connects it to the closest lane
+    * @param roads  Roadmap to add the POI
+    */
     public void place(Roads roads) {
         NODE = roads.connect(POSITION);
     } 
     
     
+    /**
+    * Get POI position in screen
+    * @return POI position
+    */
     public PVector getPosition() {
         return POSITION;
     }
     
     
+    /**
+    * Get POI associated node
+    * @return associated node
+    */
     public Node getNode() {
         return NODE;
     }
     
     
+    /**
+    * Get POI drawing size
+    * @return POI size
+    */
     public float getSize() {
         return size;
     }
     
     
+    /**
+    * Add agent to the hosted list as long as POI's crowd is under its maximum capacity, meaning agent is staying in POI
+    * @param agent  Agent to host
+    * @return true if agent is hosted, false otherwise
+    */
     public boolean host(Agent agent) {
         if(crowd.size() < CAPACITY) {
             crowd.add(agent);
-            occupancy = (float)crowd.size() / CAPACITY;
-            size = (5 + 10 * occupancy);
+            update();
             return true;
         }
         return false;
     }
     
+    
+    /**
+    * Remove agent from hosted list, meaning agent has left the POI
+    * @param agent  Agent to host
+    */
     public void unhost(Agent agent) {
         crowd.remove(agent);
-        occupancy = (float)crowd.size() / CAPACITY;
-        size = (2 + 20 * occupancy);
+        update();
     }
     
     
+    /**
+    * Update POIs variables: occupancy and drawing size
+    */
+    protected void update() {
+        occupancy = (float)crowd.size() / CAPACITY;
+        size = (5 + 10 * occupancy);
+    }
+    
+    
+    /**
+    * Draw POI in screen, with different effects depending on its status
+    */
     public void draw() {
         
         color c = lerpColor(#77DD77, #FF6666, occupancy);
-        float size = (5 + 10 * occupancy);
         
-        stroke(c); strokeWeight(2); noFill(); rectMode(CENTER);
-        rect(getPosition().x, getPosition().y, size, size);
+        rectMode(CENTER); noFill(); stroke(c); strokeWeight(2);
+        rect(POSITION.x, POSITION.y, size, size);
         
         if( selected ) {
             fill(0); textAlign(CENTER, BOTTOM);
@@ -162,11 +228,22 @@ public class POI implements Placeable {
     }
 
 
-    public void select(int mouseX, int mouseY) {
+    /**
+    * Select POI if mouse is hover
+    * @param mouseX  Horizontal mouse position in screen
+    * @param mouseY  Vertical mouse position in screen
+    * @return true if POI is selected, false otherwise
+    */
+    public boolean select(int mouseX, int mouseY) {
         selected = dist(POSITION.x, POSITION.y, mouseX, mouseY) <= size;
+        return selected;
     }
     
     
+    /**
+    * Return agent description (NAME, OCCUPANCY and CAPACITY)
+    * @return POI description
+    */
     public String toString() {
         return NAME + " [" + crowd.size() + " / " + CAPACITY + "]";
     }

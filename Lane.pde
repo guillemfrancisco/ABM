@@ -1,66 +1,137 @@
+/**
+* Lane - Lane is the connection bewtween two nodes in roadmap graph, and implements all possibilities for agents to move in them
+* @author        Marc Vilella
+* @credits       Aaron Steed http://www.robotacid.com/PBeta/AILibrary/Pathfinder/index.html
+* @version       2.0
+* @see           Node
+*/
 private class Lane {
     
     private String name;
     
-    private Node initNode;
     private Node finalNode;
     private float distance;
-    private ArrayList<PVector> vertices;
+    private ArrayList<PVector> vertices = new ArrayList();
     private boolean open = true;
     
     private int maxCrowd = 10;
     private ArrayList<Agent> crowd = new ArrayList();
+    private float occupancy;
     
     
-    public Lane(String _name, Node _initNode, Node _finalNode, ArrayList<PVector> _vertices) {
-        name = _name;
-        initNode = _initNode;
-        finalNode = _finalNode;
-        if(_vertices != null && _vertices.size() != 0) vertices = new ArrayList(_vertices);
+    /**
+    * Initiate Lane with name, init and final nodes and inbetween vertices
+    * @param name  Name of the street containing the lane
+    * @param initNode  Node where the lane starts
+    * @param finalNode  Node where the lane ends
+    * @param vertices  List of vertices that give shape to lane
+    */
+    public Lane(String name, Node initNode, Node finalNode, ArrayList<PVector> vertices) {
+        this.name = name;
+        this.finalNode = finalNode;
+        if(vertices != null && vertices.size() != 0) this.vertices = new ArrayList(vertices);
         else {
-            vertices = new ArrayList();
-            vertices.add(initNode.getPosition());
-            vertices.add(finalNode.getPosition());
+            this.vertices.add(initNode.getPosition());
+            this.vertices.add(finalNode.getPosition());
         }
-        distance = computeLength();
+        distance = calcLength();
     }
     
     
-    public Node getFinalNode() { return finalNode; }
-    public ArrayList<PVector> getVertices() { return new ArrayList(vertices); }
+    /**
+    * Get the end node, where the lane is connected
+    * @return end node
+    */
+    public Node getEnd() {
+        return finalNode;
+    }
+    
+    
+    /**
+    * Get a copy of all vertices that shape the lane
+    * @return list of vertices in lane
+    */
+    public ArrayList<PVector> getVertices() {
+        return new ArrayList(vertices);
+    }
+    
+    
+    /**
+    * Get the i vertex in lane
+    * @param i  Position of vertex in lane
+    * @return vertex in position i, null if position does not exist
+    */
     public PVector getVertex(int i) {
         if(i >= 0  && i < vertices.size()) return vertices.get(i).copy();
         return null;
     }
     
-    public float computeLength() {
+    
+    /**
+    * Calculate the length of lane
+    * @return length of lane in pixels
+    */
+    public float calcLength() {
         float dist = 0;
         for(int i = 1; i < vertices.size(); i++) dist += vertices.get(i-1).dist( vertices.get(i) );
         return dist;
     }
     
-    public float getLength() { return distance; }
     
-    public boolean isOpen() { return open; }
-   
-    public int size() { return vertices.size(); }
+    /**
+    * Get the length of the lane
+    * @return Length of lane in pixels 
+    */
+    public float getLength() {
+        return distance;
+    }
     
+    
+    /**
+    * Check if lane is open
+    * @return true if lane is open, false otherwise
+    */
+    public boolean isOpen() {
+        return open;
+    }
+
+    
+    /**
+    * Check if lane contains a specific vertex
+    * @param vertex  Position to compare with existent vertices
+    * @return true if vertex is in lane, false otherwise
+    */
     public boolean contains(PVector vertex) {
         return vertices.indexOf(vertex) >= 0;
     }
 
-
+    
+    /**
+    * Get the following vertex in lane
+    * @param vertex  Vertex in lane
+    * @return  next vertex, or null if vertex is last vertex or doesn't exist in lane
+    */
     public PVector nextVertex(PVector vertex) {
         int i = vertices.indexOf(vertex) + 1;
         if(i > 0 && i < vertices.size()) return vertices.get(i);
         return null;
     }
 
+    
+    /**
+    * Check if vertex is last of lane
+    * @param vertex  Vertex to check
+    * @return true if vertex is the last one in lane, false otherwise
+    */
     public boolean isLastVertex( PVector vertex ) {
         return vertex.equals( vertices.get( vertices.size() - 1 ) );
     }
     
     
+    /**
+    * Find contrariwise lane, if exists. Contrariwise is alane that follows the same vertices in opposite direction.
+    * @return contrariwise lane, or null if it doesn't exists
+    */
     public Lane findContrariwise() {
         for(Lane otherLane : finalNode.outboundLanes()) {
             if( otherLane.isContrariwise(this) ) return otherLane;
@@ -69,6 +140,11 @@ private class Lane {
     }
     
     
+    /**
+    * Check if lane is contrariwise. Contrariwise is the lane that follows the same vertices in opposite direction.
+    * @param lane  Lane to compare
+    * @return true if both lanes are contrariwise, false otherwise
+    */
     public boolean isContrariwise(Lane lane) {
         ArrayList<PVector> reversedVertices = new ArrayList(lane.getVertices());
         Collections.reverse(reversedVertices);
@@ -76,6 +152,11 @@ private class Lane {
     }
     
     
+    /**
+    * Find point in lane closest to specified position
+    * @param position  Position to find closest point
+    * @return closest point position in lane 
+    */
     public PVector findClosestPoint(PVector position) {
         Float minDistance = Float.NaN;
         PVector closestPoint = null;
@@ -90,6 +171,13 @@ private class Lane {
         return closestPoint;
     }
     
+    
+    /**
+    * Divide a lane by a new Node if it matches with any lane's vertex position. Connect to the node, and create
+    * a new lane from new node to actual final node.
+    * @param node  New node to divide lane by
+    * @return true if lane was succesfully divided, false otherwise
+    */
     protected boolean divide(Node node) {
         int i = vertices.indexOf(node.getPosition());
         if(i > 0 && i < vertices.size()-1) {
@@ -97,14 +185,20 @@ private class Lane {
             node.connect(finalNode, dividedVertices, name);
             vertices = new ArrayList( vertices.subList(0, i+1) );
             finalNode = node;
-            distance = computeLength();
+            distance = calcLength();
             return true;
         }
         return false;
     }
     
     
-    protected Node split(Node node) {
+    /**
+    * Split a lane by a new Node if its position is in lane. Connect to the node, and create
+    * a new lane from new node to actual final node.
+    * @param node New node to split lane by
+    * @return true if lane was succesfully splited, false otherwise
+    */
+    protected boolean split(Node node) {
         for(int i = 1; i < vertices.size(); i++) {
             if( Geometry.inLine(node.getPosition(), vertices.get(i-1), vertices.get(i)) ) {
                 
@@ -116,18 +210,23 @@ private class Lane {
                 vertices = new ArrayList( vertices.subList(0, i) );
                 vertices.add(node.getPosition());
                 finalNode = node;
-                distance = computeLength();
+                distance = calcLength();
+                return true;
             }
         }
-        return null;
+        return false;
     }
     
     
+    /**
+    * Draw lane, applying color settings depending on data to show
+    * @param stroke  Lane width in pixels
+    * @param c  Lane color
+    */
     public void draw(int stroke, color c) {
-        float crowdN = (float) crowd.size() / maxCrowd;
-        color a = lerpColor(c, #FF0000, crowdN);
+        color occupColor = lerpColor(c, #FF0000, occupancy);    // Lane occupancy color interpolation
+        stroke(occupColor, 127); strokeWeight(stroke);
         for(int i = 1; i < vertices.size(); i++) {
-            stroke(a, 127); strokeWeight(stroke);
             PVector prevVertex = vertices.get(i-1);
             PVector vertex = vertices.get(i);
             line(prevVertex.x, prevVertex.y, vertex.x, vertex.y); 
@@ -135,16 +234,30 @@ private class Lane {
     }
     
     
+    /**
+    * Add reference to an agent that is crossing in the lane. Recalculate occupancy
+    * @param agent  The agent crossing the lane
+    */
     public void addAgent(Agent agent) {
         crowd.add(agent);
+        occupancy = (float) crowd.size() / maxCrowd;
     }
     
     
+    /**
+    * Remove reference to agent that was crossing in the lane, but it's not anymore. Recalculate occupancy
+    * @param agent  The agent that was crossing the lane
+    */
     public void removeAgent(Agent agent) {
         crowd.remove(agent);
+        occupancy = (float) crowd.size() / maxCrowd;
     }
     
     
+    /**
+    * Return lane description (NAME and VERTICES count)
+    * @return lane description
+    */
     @Override
     public String toString() {
         return name + " with " + vertices.size() + "vertices [" + vertices + "]";

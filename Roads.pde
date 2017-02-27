@@ -1,12 +1,21 @@
 import java.util.Collections;
 import java.util.*;
 
+/**
+* Roads - Class to manage the roadmap of simulation
+* @author        Marc Vilella
+* @version       2.0
+*/
 public class Roads {
 
     private ArrayList<Node> nodes = new ArrayList();
     private PVector[] boundaries;
+   
     
-    
+    /**
+    * Initiate roadmap from a GeoJSON file
+    * @param file  GeoJSON file containing roads description. Use OpenStreetMap (OSM) format
+    */
     public Roads(String file) {
         
         boundaries = findBounds(file);
@@ -32,7 +41,7 @@ public class Roads {
                 
                 vertices.add(point);
                 
-                Node currNode = createNodeIfVertex(point);
+                Node currNode = getNodeIfVertex(point);
                 if(currNode != null) {
                     if(j > 0 && j < points.size()-1) {
                         if(oneWay) prevNode.connect(currNode, vertices, name);
@@ -70,11 +79,17 @@ public class Roads {
     }
 
 
-    private Node createNodeIfVertex(PVector position) {
+    /**
+    * Get a node if a position matches with an already existing vertex in roadmap
+    * @param position  Position to compare with all vertices
+    * @return a new created (not placed) node if position matches with a vertex, an already existing node if position matches with it, or
+    * null if position doesn't match with any vertex
+    */
+    private Node getNodeIfVertex(PVector position) {
         for(Node node : nodes) {
             if( position.equals(node.getPosition()) ) return node;
             for(Lane lane : node.outboundLanes()) {
-                if( position.equals(lane.getFinalNode().getPosition()) ) return lane.getFinalNode();
+                if( position.equals(lane.getEnd().getPosition()) ) return lane.getEnd();
                 else if( lane.contains(position) ) {
                     Lane laneBack = lane.findContrariwise();
                     Node newNode = new Node(position);
@@ -90,6 +105,11 @@ public class Roads {
     }
 
 
+    /**
+    * Create a node in specified position and connects it to the roadmap through a node in the closest street point
+    * @param position  Position of place to connect
+    * @return new created node, already connected to roadmap
+    */
     private Node connect(PVector position) {
         
         Lane closestLane = findClosestLane(position);
@@ -112,6 +132,7 @@ public class Roads {
     public ArrayList<Node> getAll() {
         return nodes;
     }
+
 
     public Node randomNode() {
         return nodes.get( (int) random(0, nodes.size() ) );

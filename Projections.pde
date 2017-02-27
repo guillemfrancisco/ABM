@@ -1,5 +1,13 @@
+/**
+* Projection - Static class to operate with projection and coordinate system
+* @author        Marc Vilella
+* @version       1.0
+*/
 public static class Projection {
 
+    /**
+    * Enum containing multiple cartography datum values 
+    */
     public enum Datum {
         WGS84(6378137, 298.257223563),
         NAD83(6378137, 298.257222101),
@@ -11,22 +19,32 @@ public static class Projection {
         public final float FLATTENING;
         public final float ECC;                  // First eccentricity
         
-        private Datum(float equatorial_radius, float recip_flatt) {
-            EQUATORIAL_RADIUS = equatorial_radius;
-            FLATTENING = 1 / recip_flatt;
+        private Datum(float eqR, float recipFlatt) {
+            EQUATORIAL_RADIUS = eqR;
+            FLATTENING = 1 / recipFlatt;
             POLAR_RADIUS = EQUATORIAL_RADIUS * (1 - FLATTENING);
             ECC = sqrt(1 - pow(POLAR_RADIUS, 2) / pow(EQUATORIAL_RADIUS, 2));
         }
-        
-        public String toString() { return "RADIUS (EQUATOR):" + EQUATORIAL_RADIUS + " RADIUS (POLES):" + POLAR_RADIUS + " FLATTENING:" + FLATTENING + " ECCENTRICITY:" + ECC; }
     }
     
     
-    
+    /**
+    * Translate Lat,Lon coordinates to UTM
+    * @param coords  Vector with Lat and Lon coordinates
+    * @param datum  Datum used for coordinate translation
+    * @return coordinates in UTM
+    */
     public static PVector toUTM(PVector coords, Datum datum) {
         return toUTM(coords.x, coords.y, datum);
     }
     
+    /**
+    * Translate Lat,Lon coordinates to UTM
+    * @param lat  Latitude coordinate
+    * @param lon  Longitude coordinate
+    * @param datum  Datum used for coordinate translation
+    * @return coordinates in UTM
+    */
     public static PVector toUTM(float lat, float lon, Datum datum) {
     
         if( Float.isNaN(lat) || lat > 90 || lat < -90 ) return null;

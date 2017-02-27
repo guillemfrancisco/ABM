@@ -1,11 +1,12 @@
 PFont myFont;
 
 PImage BG;
+boolean showBG = false;
 
 Roads roads;
 
 Agents agents;
-PointsOfInterest pois;
+POIs pois;
 
 Heatmap heatmap;
 
@@ -18,18 +19,18 @@ POI poi;
 
 void setup() {
     
-    size(1000, 851, P2D);
+    size(1000, 800, P2D);
     //fullScreen(P2D);
-    pixelDensity(2); // Reduce fps to half
+    pixelDensity(2);
     
     myFont = createFont("Montserrat-Light", 32);
     
-    //BG = loadImage("img/bg/ortoEPSG3857lowRes.jpg");
-    //BG.resize(width, height);
+    BG = loadImage("img/bg/ortoEPSG3857lowRes.jpg");
+    BG.resize(width, height);
     
     roads = new Roads("json/roads.geojson");
     
-    pois = new PointsOfInterest(roads);
+    pois = new POIs(roads);
     //pois.loadFromJSON("json/pois.json");
     pois.loadFromCSV("restaurants_mini.tsv");
     
@@ -38,7 +39,7 @@ void setup() {
     agents.setSpeed(0.1, 5);
     
     heatmap = new Heatmap(0, 0, width, height);
-    heatmap.setBrush("img/heatmap/brush_80x80.png", 80);
+    heatmap.setBrush("img/heatmap/brush_80x80.png", 40);
     heatmap.addGradient("heat", "img/heatmap/heat.png");
     heatmap.addGradient("cool", "img/heatmap/cool.png");
     
@@ -51,15 +52,17 @@ void draw() {
     
     background(255);
     
-    if(BG != null) image(BG, 0, 0);
-    
     if(run) agents.move();
-    roads.draw(1, #F0F3F5);
+    
+    if(showBG) image(BG, 0, 0);
+    else roads.draw(1, #F0F3F5);
+    
     pois.draw();
     agents.draw();
-    heatmap.draw();
     
-    fill(0);
+    heatmap.draw(width - 135, height - 50);
+    
+    fill( showBG ? #FFFFFF : #000000);
     textFont(myFont); textSize(10); textAlign(LEFT, TOP); textLeading(15);
     text("Agents: " + agents.count() + "\nSpeed: " + (run ? agents.getSpeed() : "[PAUSED]") + "\nFramerate: " + round(frameRate) + "fps", 20, 20);
     
@@ -69,7 +72,7 @@ void draw() {
     
     /*
     PVector mousePoint = new PVector(mouseX, mouseY);
-    ArrayList<Agent> mouseAgents = agents.filter(Filters.closeToPoint(mousePoint));
+    ArrayList<Agent> mouseAgents = agents.filter(Filters.closeToPoint(mousePoint, 200));
     for(Agent agent : mouseAgents) {
         PVector pos = agent.getPosition();
         stroke(#FF0000);
@@ -77,9 +80,10 @@ void draw() {
     }
     */
     
+    /*
     fill(0);
     text("Agents moving: " + agents.count(Filters.isMoving(false)), 20, 200);
-    
+    */
 }
 
 
@@ -113,6 +117,10 @@ void keyPressed() {
             heatmap.visible(Visibility.TOGGLE);
             heatmap.update("Nodes Density", roads.getAll(), "cool");
             break;
+            
+        case 'b':
+            showBG = !showBG;
+            break;
     }
     
 }
@@ -122,7 +130,7 @@ void mouseClicked() {
     
     agents.select(mouseX, mouseY);
     pois.select(mouseX, mouseY);
-    roads.select(mouseX, mouseY);
+    //roads.select(mouseX, mouseY);
     
     /*
     for(Node node : roads.nodes) {

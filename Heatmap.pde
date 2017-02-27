@@ -1,4 +1,9 @@
-public enum Visibility { HIDE, SHOW, TOGGLE; }
+/**
+* HEATMAP - Generate a heatmap for a group of Placeable items
+* @author        Marc Vilella
+* @credits       Philipp Seifried  http://philippseifried.com/blog/2011/09/30/generating-heatmaps-from-code/
+* @version       1.2
+*/
 
 public class Heatmap {
     
@@ -6,39 +11,60 @@ public class Heatmap {
     private final PVector POSITION;
     private final int WIDTH, HEIGHT;
     
-    private PImage heatmap, heatmapBrush;
-    private HashMap<String, PImage> gradients = new HashMap<String, PImage>();               
+    private PImage heatmap, brush;
+    private HashMap<String, PImage> gradients = new HashMap<String, PImage>(); 
+    private String useGradient;
                    
     private float maxValue = 0;
     private boolean visible = false;
   
-    Heatmap(int x, int y, int _width, int _height) {
+  
+    /**
+    * Initiate heatmap, defining its location and size
+    * @param x  Horizontal location of heatmap
+    * @param y  Vertical location of heatmap
+    * @param width  Width of heatmap
+    * @param height  Height of heatmap
+    */
+    Heatmap(int x, int y, int width, int height) {
         POSITION = new PVector(x, y);
-        WIDTH = _width;
-        HEIGHT = _height;
+        WIDTH = width;
+        HEIGHT = height;
         
         // Default B/W gradient
         PImage defaultGradient = createImage(255, 1, RGB);
-        //defaultGradient.loadPixels();
-        for(int i = 0; i < defaultGradient.pixels.length; i++) defaultGradient.pixels[i] = color(i, i, i); 
-        //defaultGradient.updatePixels();
+        for(int i = 0; i < defaultGradient.pixels.length; i++) defaultGradient.pixels[i] = color(i, i, i);
         gradients.put("default", defaultGradient);
         
     }
     
     
+    /**
+    * Set a new brush from an image
+    * @param imagePath  Path to brush image
+    * @param brushSize  Size of brush
+    */
     public void setBrush(String imagePath, int brushSize) {
-        heatmapBrush = loadImage(imagePath);
-        heatmapBrush.resize(brushSize, brushSize);
+        brush = loadImage(imagePath);
+        brush.resize(brushSize, brushSize);
     }
     
     
+    /**
+    * Save a new color gradient
+    * @param name  Name identifier for gradient
+    * @param imagePath  Path to the gradient image
+    */
     public void addGradient(String name, String imagePath) {
         File file = new File(dataPath(imagePath));
         if( file.exists() ) gradients.put(name, loadImage(imagePath));
     }
   
-  
+    
+    /**
+    * Change visibility of heatmap
+    * @param v  Enum defining visibility (HIDDE/SHOW/TOGGLE)
+    */
     public void visible(Visibility v) {
         switch(v) {
             case HIDE:
@@ -54,19 +80,34 @@ public class Heatmap {
     }
     
     
+    /**
+    * Check if heatmap is visible
+    * @return true if heatmap is visible, false otherwise
+    */
     public boolean isVisible() {
         return visible;
     }
   
   
+    /**
+    * Update heatmap with new objects. Overrides previous heatmap
+    * @param title  Title for new heatmap
+    * @param objects  List of (Placeable) objects to generate heatmap
+    */
     public void update(String title, ArrayList objects) {
         update(title, objects, "default");
     }
     
     
-    public void update(String _title, ArrayList objects, String gradient) {
+    /**
+    * Update heatmap with new objects, using a specific gradient. Overrides previous heatmap
+    * @param title  Title for new heatmap
+    * @param objects  List of (Placeable) objects to generate heatmap
+    * @param gradient  Name identifier of gradient
+    */
+    public void update(String title, ArrayList objects, String gradient) {
         maxValue = 0;
-        title = _title;
+        this.title = title;
         if(visible) {
             PImage gradientMap = createImage(WIDTH, HEIGHT, ARGB);
             gradientMap.loadPixels();
@@ -76,21 +117,30 @@ public class Heatmap {
                 gradientMap = addGradientPoint(gradientMap, position.x, position.y);
             }
             gradientMap.updatePixels();
-            PImage gradientColors = gradients.containsKey(gradient) ? gradients.get(gradient) : gradients.get("default");
+            
+            useGradient = gradient;
+            PImage gradientColors = gradients.containsKey(useGradient) ? gradients.get(useGradient) : gradients.get("default"); // Prevent unexistant gradient
             heatmap = colorize(gradientMap, gradientColors);
         }
     }
     
-  
-    public PImage addGradientPoint(PImage img, float x, float y) {
-        int startX = int(x - heatmapBrush.width / 2);
-        int startY = int(y - heatmapBrush.height / 2);
-        for(int pY = 0; pY < heatmapBrush.height; pY++) {
-            for(int pX = 0; pX < heatmapBrush.width; pX++) {
+    
+    /**
+    * Add point (brush) to grayscale heatmap
+    * @param img  Image to add point  
+    * @param x  Horizontal position of brush's center
+    * @param y  Vertical position of brush's center
+    * @return resulting grayscale heatmap
+    */
+    private PImage addGradientPoint(PImage img, float x, float y) {
+        int startX = int(x - brush.width / 2);
+        int startY = int(y - brush.height / 2);
+        for(int pY = 0; pY < brush.height; pY++) {
+            for(int pX = 0; pX < brush.width; pX++) {
                 int hmX = startX + pX;
                 int hmY = startY + pY;
                 if( hmX < 0 || hmY < 0 || hmX >= img.width || hmY >= img.height ) continue;
-                int c = heatmapBrush.pixels[pY * heatmapBrush.width + pX] & 0xff;
+                int c = brush.pixels[pY * brush.width + pX] & 0xff;
                 int i = hmY * img.width + hmX;
                 if(img.pixels[i] < 0xffffff - c) {
                     img.pixels[i] += c;
@@ -102,30 +152,49 @@ public class Heatmap {
     }
   
   
-    public PImage colorize(PImage gradientMap, PImage heatmapColors) {
-        PImage heatmap = createImage(width, height, ARGB);
-        heatmap.loadPixels();
-        for(int i=0; i< gradientMap.pixels.length; i++) {
-            int c = heatmapColors.pixels[ (int) map(gradientMap.pixels[i], 0, maxValue, 0, heatmapColors.pixels.length-1) ];
-            heatmap.pixels[i] = c;
-        }    
-        heatmap.updatePixels();
-        return heatmap;
+    /**
+    * Apply gradient colors to grayscale heatmap
+    * @param grayscaleMap  Grayscale heatmap
+    * @param gradient  Gradient image
+    * @return colored heatmap
+    */
+    private PImage colorize(PImage grayscaleMap, PImage gradient) {
+        PImage coloredMap = createImage(width, height, ARGB);
+        for(int i=0; i< grayscaleMap.pixels.length; i++) {
+            int c = gradient.pixels[ (int) map(grayscaleMap.pixels[i], 0, maxValue, 0, gradient.pixels.length-1) ];
+            coloredMap.pixels[i] = c;
+        } 
+        return coloredMap;
     }
   
-  
-    public void draw() {
+    
+    /**
+    * Draw heatmap and legend in screen
+    * @param x  Horizontal coordinate to draw legend
+    * @param y  Vertical coordinate to draw legend
+    */
+    public void draw(int x, int y) {
         if(visible && heatmap != null) {
             pushStyle();
             blendMode(MULTIPLY);
             image(heatmap, POSITION.x, POSITION.y);
             popStyle();
-            // Legend
-            //fill(#FFFFFF); noStroke(); textSize(10); textAlign(LEFT,BOTTOM);
-            //text(title, width - 135, height - 60);
-            //rect(width - 136, height - 56, 102, 22);
-            //image(heatmapColors, width - 135, height - 55, 100, 20);
+            
+            //Legend
+            pushMatrix();
+            translate(x, y);
+            fill(#888888); noStroke(); textSize(10); textAlign(LEFT,BOTTOM);
+            text(title, 0, 0);
+            textSize(8); textAlign(LEFT, TOP);
+            text("0", 0, 13);
+            textAlign(RIGHT, TOP);
+            text(round(maxValue), 100, 13);
+            image(gradients.get(useGradient), 0, 3, 100, 10);
+            popMatrix();
         }
     }  
   
 }
+
+
+public enum Visibility { HIDE, SHOW, TOGGLE; }
