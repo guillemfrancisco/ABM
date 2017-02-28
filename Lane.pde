@@ -220,16 +220,17 @@ private class Lane {
     
     /**
     * Draw lane, applying color settings depending on data to show
+    * @param canvas  Canvas to draw lane
     * @param stroke  Lane width in pixels
     * @param c  Lane color
     */
-    public void draw(int stroke, color c) {
+    public void draw(PGraphics canvas, int stroke, color c) {
         color occupColor = lerpColor(c, #FF0000, occupancy);    // Lane occupancy color interpolation
-        stroke(occupColor, 127); strokeWeight(stroke);
+        canvas.stroke(occupColor, 127); canvas.strokeWeight(stroke);
         for(int i = 1; i < vertices.size(); i++) {
             PVector prevVertex = vertices.get(i-1);
             PVector vertex = vertices.get(i);
-            line(prevVertex.x, prevVertex.y, vertex.x, vertex.y); 
+            canvas.line(prevVertex.x, prevVertex.y, vertex.x, vertex.y); 
         }
     }
     

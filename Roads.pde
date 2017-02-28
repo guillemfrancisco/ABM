@@ -9,7 +9,7 @@ import java.util.*;
 public class Roads {
 
     private ArrayList<Node> nodes = new ArrayList();
-    private PVector[] boundaries;
+    private PVector[] bounds;
    
     
     /**
@@ -18,7 +18,7 @@ public class Roads {
     */
     public Roads(String file) {
         
-        boundaries = findBounds(file);
+        bounds = findBounds(file);
         
         print("Loading roads network... ");
         JSONObject roadNetwork = loadJSONObject(file);
@@ -129,6 +129,16 @@ public class Roads {
     }
 
 
+    public int size() {
+        return nodes.size();
+    }
+
+
+    public void add(Node node) {
+        nodes.add(node);
+    }
+
+
     public ArrayList<Node> getAll() {
         return nodes;
     }
@@ -172,19 +182,19 @@ public class Roads {
     public PVector toXY(float lat, float lng) {
         PVector projPoint = Projection.toUTM(lat, lng, Projection.Datum.WGS84);
         return new PVector(
-            map(projPoint.x, boundaries[0].x, boundaries[1].x, 0, width),
-            map(projPoint.y, boundaries[0].y, boundaries[1].y, height, 0)
+            map(projPoint.x, bounds[0].x, bounds[1].x, 0, width),
+            map(projPoint.y, bounds[0].y, bounds[1].y, height, 0)
         );
     }
     
     
     public float toMeters(float px) {
-        return px * (boundaries[1].x - boundaries[0].x) / width;
+        return px * (bounds[1].x - bounds[0].x) / width;
     }
     
     
-    public void draw(int stroke, color c) {
-        for(Node node : nodes) node.draw(stroke, c);
+    public void draw(PGraphics canvas, int stroke, color c) {
+        for(Node node : nodes) node.draw(canvas, stroke, c);
     }
     
     

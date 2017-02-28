@@ -124,12 +124,13 @@ public class Path {
     
     /**
     * Draw path
+    * @param canvas  Canvas to draw path
     * @param stroke  Path stroke
     * @param c    Path color
     */
-    public void draw(int stroke, color c) {
+    public void draw(PGraphics canvas, int stroke, color c) {
         for(Lane lane : lanes) {
-            lane.draw(stroke, c);
+            lane.draw(canvas, stroke, c);
         }
     }
     

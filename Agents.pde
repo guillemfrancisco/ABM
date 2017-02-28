@@ -268,11 +268,12 @@ public abstract class Agent implements Placeable {
     
     /**
     * Draw agent in panic mode (exploding effect)
+    * @param canvas  Canvas to draw agent
     */
-    protected void drawPanic() {
-        fill(#FF0000, 50); noStroke();
+    protected void drawPanic(PGraphics canvas) {
+        canvas.fill(#FF0000, 50); canvas.noStroke();
         explodeSize = (explodeSize + 1)  % 30;
-        ellipse(pos.x, pos.y, explodeSize, explodeSize);
+        canvas.ellipse(pos.x, pos.y, explodeSize, explodeSize);
     }
     
     
@@ -302,7 +303,7 @@ public abstract class Agent implements Placeable {
     protected abstract void whenHosted();
     
     /** Draw agent in screen */
-    public abstract void draw();
+    public abstract void draw(PGraphics canvas);
     
     
 }
@@ -329,28 +330,29 @@ private class Person extends Agent {
     
     /**
     * Draw Person in screen, with different effects depending on its status
+    * @param canvas  Canvas to draw person
     */
-    public void draw() {
+    public void draw(PGraphics canvas) {
         
         // Draw aurea, path and some info if agent is selected
         if(selected) {
-            path.draw(1, COLOR);
-            fill(COLOR, 75); noStroke();
-            ellipse(pos.x, pos.y, 4 * SIZE, 4 * SIZE);
+            path.draw(canvas, 1, COLOR);
+            canvas.fill(COLOR, 130); canvas.noStroke();
+            canvas.ellipse(pos.x, pos.y, 4 * SIZE, 4 * SIZE);
             //fill(0);
             //text(round(distTraveled) + "/" + round(path.getLength()), pos.x, pos.y);
         }
         
         // Draw exploding effect and line to destination if in panicMode
         if(panicMode) {
-            drawPanic();
+            drawPanic(canvas);
             PVector destPos = destination.getPosition();
-            stroke(#FF0000, 100); strokeWeight(1);
-            line(pos.x, pos.y, destPos.x, destPos.y);
+            canvas.stroke(#FF0000, 100); canvas.strokeWeight(1);
+            canvas.line(pos.x, pos.y, destPos.x, destPos.y);
         }
         
-        fill(COLOR); noStroke();
-        ellipse(pos.x, pos.y, SIZE, SIZE);
+        canvas.fill(COLOR); canvas.noStroke();
+        canvas.ellipse(pos.x, pos.y, SIZE, SIZE);
     }
 
 
@@ -399,18 +401,19 @@ private class Vehicle extends Agent {
     
     /**
     * Draw Vehicle in screen, with different effects depending on its status
+    * @param canvas  Canvas to draw agent
     */
-    public void draw() {
+    public void draw(PGraphics canvas) {
         
         // Draw aurea, path and some info if agent is selected
         if(selected) {
-            path.draw(1, COLOR);
-            fill(COLOR, 75); noStroke();
-            ellipse(pos.x, pos.y, 4 * SIZE, 4 * SIZE);
+            path.draw(canvas, 1, COLOR);
+            canvas.fill(COLOR, 130); canvas.noStroke();
+            canvas.ellipse(pos.x, pos.y, 4 * SIZE, 4 * SIZE);
         }
         
-        noFill(); stroke(COLOR); strokeWeight(1);
-        ellipse(pos.x, pos.y, SIZE, SIZE);
+        canvas.noFill(); canvas.stroke(COLOR); canvas.strokeWeight(1);
+        canvas.ellipse(pos.x, pos.y, SIZE, SIZE);
     }
     
     

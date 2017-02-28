@@ -1,21 +1,15 @@
 PFont myFont;
 
+PGraphics canvas;
 PImage BG;
 boolean showBG = false;
 
 Roads roads;
-
 Agents agents;
 POIs pois;
-
 Heatmap heatmap;
 
-Path debugPath;
-Node debugNode;
-
 boolean run = false;
-
-POI poi;
 
 void setup() {
     
@@ -24,6 +18,7 @@ void setup() {
     pixelDensity(2);
     
     myFont = createFont("Montserrat-Light", 32);
+    canvas = createGraphics(width, height, P2D);
     
     BG = loadImage("img/bg/ortoEPSG3857lowRes.jpg");
     BG.resize(width, height);
@@ -50,40 +45,34 @@ void setup() {
 
 void draw() {
     
-    background(255);
+    background(#FFFFFF);
     
     if(run) agents.move();
     
-    if(showBG) image(BG, 0, 0);
-    else roads.draw(1, #F0F3F5);
+    canvas.beginDraw();
+    canvas.background(255, 0);
     
-    pois.draw();
-    agents.draw();
+    if(showBG) canvas.image(BG, 0, 0);
+    else roads.draw(canvas, 1, #F0F3F5);
+    pois.draw(canvas);
+    agents.draw(canvas);
     
-    heatmap.draw(width - 135, height - 50);
+    heatmap.draw(canvas, width - 135, height - 50);
     
-    fill( showBG ? #FFFFFF : #000000);
-    textFont(myFont); textSize(10); textAlign(LEFT, TOP); textLeading(15);
-    text("Agents: " + agents.count() + "\nSpeed: " + (run ? agents.getSpeed() : "[PAUSED]") + "\nFramerate: " + round(frameRate) + "fps", 20, 20);
+    canvas.fill( showBG ? #FFFFFF : #000000);
+    canvas.textFont(myFont); canvas.textSize(10); canvas.textAlign(LEFT, TOP); canvas.textLeading(15);
+    canvas.text("Agents: " + agents.count() + "\nSpeed: " + (run ? agents.getSpeed() : "[PAUSED]") + "\nFramerate: " + round(frameRate) + "fps", 20, 20);
     
-    agents.printLegend(20, 70);
+    agents.printLegend(canvas, 20, 70);
     
-    //if(debugPath.available()) debugPath.draw(2, #FF0000);
-    
-    /*
-    PVector mousePoint = new PVector(mouseX, mouseY);
-    ArrayList<Agent> mouseAgents = agents.filter(Filters.closeToPoint(mousePoint, 200));
-    for(Agent agent : mouseAgents) {
-        PVector pos = agent.getPosition();
-        stroke(#FF0000);
-        line(mousePoint.x, mousePoint.y, pos.x, pos.y);
-    }
-    */
+    canvas.endDraw();
     
     /*
     fill(0);
     text("Agents moving: " + agents.count(Filters.isMoving(false)), 20, 200);
     */
+    
+    image(canvas, 0, 0);
 }
 
 
@@ -132,16 +121,4 @@ void mouseClicked() {
     pois.select(mouseX, mouseY);
     //roads.select(mouseX, mouseY);
     
-    /*
-    for(Node node : roads.nodes) {
-        if(node.selected) {
-            if(debugNode != null) {
-                debugPath.findPath(roads.nodes, debugNode, node);
-                debugNode = node;
-            }
-            else debugNode = node;
-            break;
-        }
-    }
-    */
 }

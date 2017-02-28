@@ -5,7 +5,7 @@ public interface Placeable {
     public void place(Roads roads);
     public PVector getPosition();
     public boolean select(int mouseX, int mouseY);
-    public void draw();
+    public void draw(PGraphics canvas);
 }
 
 

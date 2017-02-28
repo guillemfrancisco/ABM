@@ -43,8 +43,8 @@ private class Node implements Placeable, Comparable<Node> {
     */
     public void place(Roads roads) {
         if(id == -1) {
-            id = roads.getAll().size();
-            roads.getAll().add(this);
+            id = roads.size();
+            roads.add(this);
         }
     }
     
@@ -113,11 +113,12 @@ private class Node implements Placeable, Comparable<Node> {
 
     /**
     * Draw the node and outbound lanes with default colors
+    * @param canvas  Canvas to draw node
     */
-    public void draw() {
-        stroke(#000000);
-        point(position.x, position.y);
-        draw(1, #F0F3F5);
+    public void draw(PGraphics canvas) {
+        canvas.fill(#000000); 
+        canvas.ellipse(position.x, position.y, 3, 3);
+        draw(canvas, 1, #F0F3F5);
     }
     
     
@@ -126,9 +127,9 @@ private class Node implements Placeable, Comparable<Node> {
     * @param stroke  Lane width in pixels
     * @param c  Lanes color
     */
-    public void draw(int stroke, color c) {
+    public void draw(PGraphics canvas, int stroke, color c) {
         for(Lane lane : lanes) {
-            lane.draw(stroke, c);
+            lane.draw(canvas, stroke, c);
         }
     }
     

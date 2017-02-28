@@ -8,7 +8,7 @@ public class POIs extends Facade {
 
     /**
     * Initiate pois of interest facade and agents' Factory
-    * @param roads  Roadmap where agents will be placed and move
+    * @param parent  Sketch applet, just put this when calling constructor
     */
     public POIs(PApplet parent) {
         super(parent);
@@ -212,17 +212,18 @@ public class POI implements Placeable {
     
     /**
     * Draw POI in screen, with different effects depending on its status
+    * @param canvas  Canvas to draw POI
     */
-    public void draw() {
+    public void draw(PGraphics canvas) {
         
         color c = lerpColor(#77DD77, #FF6666, occupancy);
         
-        rectMode(CENTER); noFill(); stroke(c); strokeWeight(2);
-        rect(POSITION.x, POSITION.y, size, size);
+        canvas.rectMode(CENTER); canvas.noFill(); canvas.stroke(c); canvas.strokeWeight(2);
+        canvas.rect(POSITION.x, POSITION.y, size, size);
         
         if( selected ) {
-            fill(0); textAlign(CENTER, BOTTOM);
-            text(this.toString(), POSITION.x, POSITION.y - size / 2);
+            canvas.fill(0); canvas.textAlign(CENTER, BOTTOM);
+            canvas.text(this.toString(), POSITION.x, POSITION.y - size / 2);
         }
 
     }

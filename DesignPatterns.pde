@@ -75,9 +75,10 @@ public abstract class Facade {
     
     /** 
     * Draw all items
+    * @param canvas  Canvas to draw items
     */
-    public void draw() {
-        for(Placeable item : items) item.draw();
+    public void draw(PGraphics canvas) {
+        for(Placeable item : items) item.draw(canvas);
     }
     
     
@@ -118,14 +119,15 @@ public abstract class Facade {
     
     /**
     * Print item's legend in a specific position
+    * @param canvas  Canvas to draw legend
     * @param x  Horizontal position in screen
     * @param y  Vertical position in screen
     */
-    public void printLegend(int x, int y) {
+    public void printLegend(PGraphics canvas, int x, int y) {
         String txt = "";
         IntDict counter = factory.getCounter();
         for(String name : counter.keyArray()) txt += name + ": " + counter.get(name) + "\n";
-        text(txt, x, y);
+        canvas.text(txt, x, y);
     }
     
 }
