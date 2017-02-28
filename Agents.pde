@@ -12,10 +12,10 @@ public class Agents extends Facade {
     
     /**
     * Initiate agents facade and agents' Factory
-    * @param roads  Roadmap where agents will be placed and move
+    * @param parent  Sketch applet, just put this when calling constructor
     */
-    public Agents(Roads roads) {
-        super(roads);
+    public Agents(PApplet parent) {
+        super(parent);
         factory = new AgentFactory();
     }
 

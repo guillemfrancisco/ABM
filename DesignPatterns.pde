@@ -6,17 +6,17 @@
 */
 public abstract class Facade {
     
-    protected final Roads ROADMAP;
+    protected PApplet parent;
     protected Factory factory;
     protected ArrayList<Placeable> items = new ArrayList();
     
     
     /**
     * Initiate Facade to work with specific roadmap
-    * @param roads  Roadmap to use with agents
+    * @param parent  Sketch applet, just put this when calling constructor
     */
-    public Facade(Roads roadmap) {
-        ROADMAP = roadmap;
+    public Facade(PApplet parent) {
+        this.parent = parent;
     }
     
     
@@ -94,22 +94,24 @@ public abstract class Facade {
     /**
     * Create new items from a JSON file, if it exists
     * @param path  Path to JSON file with items definitions
+    * @param roads  Roadmap where objects will be added
     */
-    public void loadFromJSON(String path) {
+    public void loadJSON(String path, Roads roadmap) {
         File file = new File( dataPath(path) );
         if( !file.exists() ) println("ERROR! JSON file does not exist");
-        else items.addAll( factory.loadJSON(file, ROADMAP) );
+        else items.addAll( factory.loadJSON(file, roadmap) );
     }
     
     
     /**
     * Create new items from a CSV file, if it exists
     * @param path  Path to CSV file with items definitions
+    * @param roads  Roadmap where objects will be added
     */
-    public void loadFromCSV(String path) {
+    public void loadCSV(String path, Roads roadmap) {
         File file = new File( dataPath(path) );
         if( !file.exists() ) println("ERROR! CSV file does not exist");
-        else items.addAll( factory.loadCSV(path, ROADMAP) );
+        else items.addAll( factory.loadCSV(path, roadmap) );
     
     }
     

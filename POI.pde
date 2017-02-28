@@ -10,8 +10,8 @@ public class POIs extends Facade {
     * Initiate pois of interest facade and agents' Factory
     * @param roads  Roadmap where agents will be placed and move
     */
-    public POIs(Roads roadmap) {
-        super(roadmap);
+    public POIs(PApplet parent) {
+        super(parent);
         factory = new POIFactory();
     }
     

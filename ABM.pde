@@ -30,12 +30,12 @@ void setup() {
     
     roads = new Roads("json/roads.geojson");
     
-    pois = new POIs(roads);
-    //pois.loadFromJSON("json/pois.json");
-    pois.loadFromCSV("restaurants_mini.tsv");
+    pois = new POIs(this);
+    //pois.loadJSON("json/pois.json");
+    pois.loadCSV("restaurants_mini.tsv", roads);
     
-    agents = new Agents(roads);
-    agents.loadFromJSON("json/clusters.json");
+    agents = new Agents(this);
+    agents.loadJSON("json/clusters.json", roads);
     agents.setSpeed(0.1, 5);
     
     heatmap = new Heatmap(0, 0, width, height);
