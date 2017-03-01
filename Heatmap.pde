@@ -159,7 +159,7 @@ public class Heatmap {
     * @return colored heatmap
     */
     private PImage colorize(PImage grayscaleMap, PImage gradient) {
-        PImage coloredMap = createImage(width, height, ARGB);
+        PImage coloredMap = createImage(WIDTH, HEIGHT, ARGB);
         for(int i=0; i< grayscaleMap.pixels.length; i++) {
             int c = gradient.pixels[ (int) map(grayscaleMap.pixels[i], 0, maxValue, 0, gradient.pixels.length-1) ];
             coloredMap.pixels[i] = c;

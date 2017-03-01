@@ -1,14 +1,16 @@
 PFont myFont;
 
+final int simWidth = 1000;
+final int simHeight = 851;
+
 WarpSurface model3D;
-WarpTexture modelTexture;
+WarpTexture texture;
 final PVector[] roi = new PVector[] {
     new PVector(42.505086, 1.509961),
     new PVector(42.517066, 1.544024),
     new PVector(42.508161, 1.549798),
     new PVector(42.496164, 1.515728)
 };
-
 
 PGraphics canvas;
 PImage BG;
@@ -23,23 +25,24 @@ boolean run = false;
 
 void setup() {
     
-    size(1000, 851, P2D);
-    //fullScreen(P2D);
+    //size(1000, 848, P2D);
+    fullScreen(P2D);
     pixelDensity(2);
+    smooth();
     
     myFont = createFont("Montserrat-Light", 32);
     
     model3D = new WarpSurface(this, 900, 300, 10, 5);
     model3D.loadConfig();
-    modelTexture = new WarpTexture("img/bg/ortoEPSG3857lowRes_small.jpg", 42.482114, 1.489787, 42.533772, 1.572123);
-    modelTexture.setROI(roi);
+    texture = new WarpTexture("img/bg/ortoEPSG3857_mini.jpg", simWidth, simHeight, 42.482114, 1.489787, 42.533772, 1.572123);
+    texture.setROI(roi);
     
-    canvas = createGraphics(width, height, P2D);
+    canvas = createGraphics(simWidth, simHeight, P2D);
     
-    BG = loadImage("img/bg/ortoEPSG3857lowRes.jpg");
-    BG.resize(width, height);
+    BG = loadImage("img/bg/ortoEPSG3857_mini.jpg");
+    BG.resize(simWidth, simHeight);
     
-    roads = new Roads("json/roads.geojson");
+    roads = new Roads("json/roads.geojson", simWidth, simHeight);
     
     pois = new POIs(this);
     //pois.loadJSON("json/pois.json");
@@ -49,7 +52,7 @@ void setup() {
     agents.loadJSON("json/clusters.json", roads);
     agents.setSpeed(0.1, 5);
     
-    heatmap = new Heatmap(0, 0, width, height);
+    heatmap = new Heatmap(0, 0, simWidth, simHeight);
     heatmap.setBrush("img/heatmap/brush_80x80.png", 40);
     heatmap.addGradient("heat", "img/heatmap/heat.png");
     heatmap.addGradient("cool", "img/heatmap/cool.png");
@@ -59,7 +62,7 @@ void setup() {
 
 void draw() {
     
-    background(0);
+    background(255);
     
     if(run) agents.move();
     
@@ -68,25 +71,28 @@ void draw() {
     
     if(showBG) canvas.image(BG, 0, 0);
     else roads.draw(canvas, 1, #F0F3F5);
+    
     pois.draw(canvas);
     agents.draw(canvas);
     heatmap.draw(canvas, width - 135, height - 50);
     
-    canvas.fill( showBG ? #FFFFFF : #000000);
+    canvas.fill(#000000);
     canvas.textFont(myFont); canvas.textSize(10); canvas.textAlign(LEFT, TOP); canvas.textLeading(15);
     canvas.text("Agents: " + agents.count() + "\nSpeed: " + (run ? agents.getSpeed() : "[PAUSED]") + "\nFramerate: " + round(frameRate) + "fps", 20, 20);
     agents.printLegend(canvas, 20, 70);
-    
-    canvas.endDraw();
-    image(canvas,0, 0);
     
     /*
     fill(0);
     text("Agents moving: " + agents.count(Filters.isMoving(false)), 20, 200);
     */
     
-    //modelTexture.update(canvas);
-    //model3D.draw(modelTexture);
+    canvas.endDraw();
+    image(canvas, 0, 0, simWidth, simHeight);
+    
+    //texture.update(canvas);
+    //texture.draw();
+    //model3D.draw(texture);
+    
 }
 
 

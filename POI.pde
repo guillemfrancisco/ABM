@@ -59,7 +59,7 @@ private class POIFactory extends Factory {
                 int capacity        = item.getInt("capacity");
                 JSONArray languages = item.getJSONArray("languages");
                 
-                if( location.x > 0 && location.x < width && location.y > 0 && location.y < height ) {
+                if( location != null ) {
                     pois.add( new POI(roads, count, location, name, capacity) );
                     counter.increment(clusterName);
                     count++;
@@ -89,7 +89,7 @@ private class POIFactory extends Factory {
             int capacity        = row.getInt("CAPACITY");
             int size            = 3;
             
-            if( location.x > 0 && location.x < width && location.y > 0 && location.y < height ) {
+            if( location != null ) {
                 pois.add( new POI(roads, count, location, name, capacity) );
                 counter.increment(path); 
                 count++;

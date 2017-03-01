@@ -1,30 +1,27 @@
 public class WarpTexture {
 
     private PVector[] bounds;
-    private PVector[] roi;
+    private PVector[] roi = new PVector[4];
     private PImage image;
     
-    public WarpTexture(String imagePath, float TLx, float TLy, float BRx, float BRy) {
+    public WarpTexture(String imagePath, int w, int h, float TLy, float TLx, float BRy, float BRx) {
         image = loadImage(imagePath);
-        bounds = new PVector[] {
-            Projection.toUTM(TLx, TLy, Projection.Datum.WGS84),
-            Projection.toUTM(BRx, BRy, Projection.Datum.WGS84)
-        };
+        image.resize(w, h);
+        bounds = new PVector[] { new PVector(TLx, TLy), new PVector(BRx, BRy) };
         roi = new PVector[] {
-            bounds[0],
-            Projection.toUTM(BRx, TLy, Projection.Datum.WGS84),
-            bounds[1],
-            Projection.toUTM(TLx, BRy, Projection.Datum.WGS84)
+            new PVector(0, 0),
+            new PVector(image.width, 0),
+            new PVector(image.width, image.height),
+            new PVector(0, image.height)
         };
     }
     
     public void setROI(PVector[] roiLatLon) {
-        if(roi.length == 4) {
+        if(roiLatLon.length == 4) {
             for(int i = 0; i < 4; i++) {
-                PVector roiUTM = Projection.toUTM(roiLatLon[i], Projection.Datum.WGS84);
-                this.roi[i] = new PVector(
-                    map(roiUTM.x, bounds[0].x, bounds[1].x, 0, image.width),
-                    map(roiUTM.y, bounds[0].y, bounds[1].y, image.height, 0)
+                roi[i] = new PVector(
+                    map(roiLatLon[i].y, bounds[0].x, bounds[1].x, 0, image.width),
+                    map(roiLatLon[i].x, bounds[0].y, bounds[1].y, image.height, 0)
                 );
             }
         }
@@ -46,6 +43,19 @@ public class WarpTexture {
     
     public PVector[] getROI() {
         return roi;
+    }
+    
+    public void draw() {
+        pushMatrix();
+        scale(0.4);
+        image(image,0,0);
+        beginShape();
+        stroke(#FF0000); noFill();
+        for(PVector vertex : roi) {
+            vertex(vertex.x, vertex.y);
+        }
+        endShape(CLOSE);
+        popMatrix();
     }
     
 }

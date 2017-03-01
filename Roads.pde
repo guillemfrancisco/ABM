@@ -9,6 +9,7 @@ import java.util.*;
 public class Roads {
 
     private ArrayList<Node> nodes = new ArrayList();
+    private PVector window;
     private PVector[] bounds;
    
     
@@ -16,8 +17,9 @@ public class Roads {
     * Initiate roadmap from a GeoJSON file
     * @param file  GeoJSON file containing roads description. Use OpenStreetMap (OSM) format
     */
-    public Roads(String file) {
+    public Roads(String file, int x, int y) {
         
+        window = new PVector(x, y);
         bounds = findBounds(file);
         
         print("Loading roads network... ");
@@ -39,26 +41,28 @@ public class Roads {
             
                 PVector point = toXY(points.getJSONArray(j).getFloat(1), points.getJSONArray(j).getFloat(0));
                 
-                vertices.add(point);
-                
-                Node currNode = getNodeIfVertex(point);
-                if(currNode != null) {
-                    if(j > 0 && j < points.size()-1) {
+                if(point != null) {
+                    vertices.add(point);
+                    
+                    Node currNode = getNodeIfVertex(point);
+                    if(currNode != null) {
+                        if(j > 0 && j < points.size()-1) {
+                            if(oneWay) prevNode.connect(currNode, vertices, name);
+                            else prevNode.connectBoth(currNode, vertices, name);
+                            vertices = new ArrayList();
+                            vertices.add(point);
+                            prevNode = currNode;
+                        }
+                    } else currNode = new Node(point);
+                    
+                    if(prevNode == null) {
+                        prevNode = currNode;
+                        currNode.place(this);
+                    } else if(j == points.size()-1) {
                         if(oneWay) prevNode.connect(currNode, vertices, name);
                         else prevNode.connectBoth(currNode, vertices, name);
-                        vertices = new ArrayList();
-                        vertices.add(point);
-                        prevNode = currNode;
+                        currNode.place(this);
                     }
-                } else currNode = new Node(point);
-                
-                if(prevNode == null) {
-                    prevNode = currNode;
-                    currNode.place(this);
-                } else if(j == points.size()-1) {
-                    if(oneWay) prevNode.connect(currNode, vertices, name);
-                    else prevNode.connectBoth(currNode, vertices, name);
-                    currNode.place(this);
                 }
                 
             }
@@ -171,20 +175,21 @@ public class Roads {
             }
         }
         
+        println(minLng + ", " + maxLat + "  -  " + maxLng + ", " + minLat);
         return new PVector[] {
-            Projection.toUTM(minLat, minLng, Projection.Datum.WGS84),
-            Projection.toUTM(maxLat, maxLng, Projection.Datum.WGS84)
+            new PVector(minLng, minLat),
+            new PVector(maxLng, maxLat)
         };
-        
     }
 
     
     public PVector toXY(float lat, float lng) {
-        PVector projPoint = Projection.toUTM(lat, lng, Projection.Datum.WGS84);
+        if(lng < bounds[0].x || lng > bounds[1].x || lat < bounds[0].y || lat > bounds[1].y) return null;
         return new PVector(
-            map(projPoint.x, bounds[0].x, bounds[1].x, 0, width),
-            map(projPoint.y, bounds[0].y, bounds[1].y, height, 0)
+            map(lng, bounds[0].x, bounds[1].x, 0, window.x),
+            map(lat, bounds[0].y, bounds[1].y, window.y, 0)
         );
+        
     }
     
     
