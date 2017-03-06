@@ -1,10 +1,28 @@
 PFont myFont;
 
+/*
 final int simWidth = 1000;
 final int simHeight = 851;
+final PVector[] bounds = new PVector[] {
+    new PVector(42.482114, 1.489787),
+    new PVector(42.533772, 1.572123)
+};
+final String roadsPath = "json/roads.geojson";
+final String bgPath = "img/bg/ortoEPSG3857_small.jpg";
+*/
+
+final int simWidth = 1000;
+final int simHeight = 745;
+final PVector[] bounds = new PVector[] {
+    new PVector(42.4955, 1.5095),
+    new PVector(42.5180, 1.5505)
+};
+final String roadsPath = "json/roads_cityscope.geojson";
+final String bgPath = "img/bg/orto_cityscope_small.jpg";
 
 WarpSurface model3D;
 WarpTexture texture;
+
 final PVector[] roi = new PVector[] {
     new PVector(42.505086, 1.509961),
     new PVector(42.517066, 1.544024),
@@ -34,15 +52,15 @@ void setup() {
     
     model3D = new WarpSurface(this, 900, 300, 10, 5);
     model3D.loadConfig();
-    texture = new WarpTexture("img/bg/ortoEPSG3857_mini.jpg", simWidth, simHeight, 42.482114, 1.489787, 42.533772, 1.572123);
+    texture = new WarpTexture(bgPath, simWidth, simHeight, bounds[0].x, bounds[0].y, bounds[1].x, bounds[1].y);
     texture.setROI(roi);
     
     canvas = createGraphics(simWidth, simHeight, P2D);
     
-    BG = loadImage("img/bg/ortoEPSG3857_mini.jpg");
+    BG = loadImage(bgPath);
     BG.resize(simWidth, simHeight);
     
-    roads = new Roads("json/roads.geojson", simWidth, simHeight);
+    roads = new Roads(roadsPath, simWidth, simHeight, bounds);
     
     pois = new POIs(this);
     //pois.loadJSON("json/pois.json");
@@ -87,11 +105,14 @@ void draw() {
     */
     
     canvas.endDraw();
-    image(canvas, 0, 0, simWidth, simHeight);
+    //image(canvas, 0, 0, simWidth, simHeight);
     
-    //texture.update(canvas);
+    texture.update(canvas);
     //texture.draw();
-    //model3D.draw(texture);
+    model3D.draw(texture);
+    
+    fill(0);
+    text(frameRate, 20, 20);
     
 }
 
