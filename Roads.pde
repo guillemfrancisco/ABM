@@ -17,10 +17,11 @@ public class Roads {
     * Initiate roadmap from a GeoJSON file
     * @param file  GeoJSON file containing roads description. Use OpenStreetMap (OSM) format
     */
-    public Roads(String file, int x, int y) {
+    public Roads(String file, int x, int y, PVector[] bounds) {
         
         window = new PVector(x, y);
-        bounds = findBounds(file);
+        this.bounds = bounds;
+        //bounds = findBounds(file);
         
         print("Loading roads network... ");
         JSONObject roadNetwork = loadJSONObject(file);
@@ -63,6 +64,8 @@ public class Roads {
                         else prevNode.connectBoth(currNode, vertices, name);
                         currNode.place(this);
                     }
+                } else {
+                    println("POINT " + i + " (" + point + ") is out ");
                 }
                 
             }
@@ -153,41 +156,11 @@ public class Roads {
     }
     
 
-    private PVector[] findBounds(String file) {
-        
-        float minLat = Float.MAX_VALUE;
-        float maxLat = Float.MIN_VALUE;
-        float minLng = Float.MAX_VALUE;
-        float maxLng = Float.MIN_VALUE;
-        
-        JSONObject roadNetwork = loadJSONObject(file);
-        JSONArray lanes = roadNetwork.getJSONArray("features");
-        for(int i = 0; i < lanes.size(); i++) {
-            JSONObject lane = lanes.getJSONObject(i);
-            JSONArray points = lane.getJSONObject("geometry").getJSONArray("coordinates");
-            for(int j = 0; j < points.size(); j++) {
-                float lat = points.getJSONArray(j).getFloat(1);
-                float lng = points.getJSONArray(j).getFloat(0);
-                minLat = min( minLat, lat );
-                maxLat = max( maxLat, lat );
-                minLng = min( minLng, lng );
-                maxLng = max( maxLng, lng );
-            }
-        }
-        
-        println(minLng + ", " + maxLat + "  -  " + maxLng + ", " + minLat);
-        return new PVector[] {
-            new PVector(minLng, minLat),
-            new PVector(maxLng, maxLat)
-        };
-    }
-
-    
-    public PVector toXY(float lat, float lng) {
-        if(lng < bounds[0].x || lng > bounds[1].x || lat < bounds[0].y || lat > bounds[1].y) return null;
+    public PVector toXY(float lat, float lon) {
+        if(lat < bounds[0].x || lat > bounds[1].x || lon < bounds[0].y || lon > bounds[1].y) return null;
         return new PVector(
-            map(lng, bounds[0].x, bounds[1].x, 0, window.x),
-            map(lat, bounds[0].y, bounds[1].y, window.y, 0)
+            map(lon, bounds[0].y, bounds[1].y, 0, window.x),
+            map(lat, bounds[0].x, bounds[1].x, window.y, 0)
         );
         
     }
