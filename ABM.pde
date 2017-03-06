@@ -1,6 +1,21 @@
 PFont myFont;
 
+Roads roads;
+Agents agents;
+POIs pois;
+Heatmap heatmap;
+boolean run = false;
+
+//PGraphics canvas;
+PImage BG;
+boolean showBG = true;
+
+// PROJECTION 3D MODEL
+WarpSurface model3D;
+Canvas canvas;
+
 /*
+// SIMULACIÓ FONS DE VALL
 final int simWidth = 1000;
 final int simHeight = 851;
 final PVector[] bounds = new PVector[] {
@@ -11,6 +26,7 @@ final String roadsPath = "json/roads.geojson";
 final String bgPath = "img/bg/ortoEPSG3857_small.jpg";
 */
 
+// SIMULACIÓ CITYSCOPE
 final int simWidth = 1000;
 final int simHeight = 745;
 final PVector[] bounds = new PVector[] {
@@ -19,10 +35,6 @@ final PVector[] bounds = new PVector[] {
 };
 final String roadsPath = "json/roads_cityscope.geojson";
 final String bgPath = "img/bg/orto_cityscope_small.jpg";
-
-WarpSurface model3D;
-WarpTexture texture;
-
 final PVector[] roi = new PVector[] {
     new PVector(42.505086, 1.509961),
     new PVector(42.517066, 1.544024),
@@ -30,20 +42,11 @@ final PVector[] roi = new PVector[] {
     new PVector(42.496164, 1.515728)
 };
 
-PGraphics canvas;
-PImage BG;
-boolean showBG = true;
 
-Roads roads;
-Agents agents;
-POIs pois;
-Heatmap heatmap;
-
-boolean run = false;
 
 void setup() {
     
-    //size(1000, 848, P2D);
+    //size(1000, 745, P2D);
     fullScreen(P2D);
     pixelDensity(2);
     smooth();
@@ -52,10 +55,8 @@ void setup() {
     
     model3D = new WarpSurface(this, 900, 300, 10, 5);
     model3D.loadConfig();
-    texture = new WarpTexture(bgPath, simWidth, simHeight, bounds[0].x, bounds[0].y, bounds[1].x, bounds[1].y);
-    texture.setROI(roi);
-    
-    canvas = createGraphics(simWidth, simHeight, P2D);
+    canvas = new Canvas(this, simWidth, simHeight, bounds);
+    canvas.setROI(roi);
     
     BG = loadImage(bgPath);
     BG.resize(simWidth, simHeight);
@@ -94,7 +95,7 @@ void draw() {
     agents.draw(canvas);
     heatmap.draw(canvas, width - 135, height - 50);
     
-    canvas.fill(#000000);
+    canvas.fill(showBG ? #FFFFFF : #000000);
     canvas.textFont(myFont); canvas.textSize(10); canvas.textAlign(LEFT, TOP); canvas.textLeading(15);
     canvas.text("Agents: " + agents.count() + "\nSpeed: " + (run ? agents.getSpeed() : "[PAUSED]") + "\nFramerate: " + round(frameRate) + "fps", 20, 20);
     agents.printLegend(canvas, 20, 70);
@@ -105,11 +106,8 @@ void draw() {
     */
     
     canvas.endDraw();
-    //image(canvas, 0, 0, simWidth, simHeight);
-    
-    texture.update(canvas);
-    //texture.draw();
-    model3D.draw(texture);
+    image(canvas, 0, 0, simWidth, simHeight);
+    //model3D.draw(canvas);
     
     fill(0);
     text(frameRate, 20, 20);

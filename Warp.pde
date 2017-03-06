@@ -1,67 +1,3 @@
-public class WarpTexture {
-
-    private PVector[] bounds;
-    private PVector[] roi = new PVector[4];
-    private PImage image;
-    
-    public WarpTexture(String imagePath, int w, int h, float TLy, float TLx, float BRy, float BRx) {
-        image = loadImage(imagePath);
-        image.resize(w, h);
-        bounds = new PVector[] { new PVector(TLx, TLy), new PVector(BRx, BRy) };
-        roi = new PVector[] {
-            new PVector(0, 0),
-            new PVector(image.width, 0),
-            new PVector(image.width, image.height),
-            new PVector(0, image.height)
-        };
-    }
-    
-    public void setROI(PVector[] roiLatLon) {
-        if(roiLatLon.length == 4) {
-            for(int i = 0; i < 4; i++) {
-                roi[i] = new PVector(
-                    map(roiLatLon[i].y, bounds[0].x, bounds[1].x, 0, image.width),
-                    map(roiLatLon[i].x, bounds[0].y, bounds[1].y, image.height, 0)
-                );
-            }
-        }
-    }
-    
-    
-    public void update(String imagePath) {
-        image = loadImage(imagePath);
-    }
-    
-    public void update(PGraphics graphics) {
-        image = graphics;
-    }
-    
-    
-    public PImage getImage() {
-        return image;
-    }
-    
-    public PVector[] getROI() {
-        return roi;
-    }
-    
-    public void draw() {
-        pushMatrix();
-        scale(0.4);
-        image(image,0,0);
-        beginShape();
-        stroke(#FF0000); noFill();
-        for(PVector vertex : roi) {
-            vertex(vertex.x, vertex.y);
-        }
-        endShape(CLOSE);
-        popMatrix();
-    }
-    
-}
-
-
-
 public class WarpSurface {
     
     private PVector[][] points;
@@ -88,10 +24,11 @@ public class WarpSurface {
     }
 
     
-    public void draw(WarpTexture wt) {
+    //public void draw(WarpTexture wt) {
+    public void draw(Canvas canvas) {
         
-        PImage img = wt.getImage();
-        PVector[] roi = wt.getROI();
+        //PImage img = wt.getImage();
+        PVector[] roi = canvas.getROI();
         
         for(int y = 0; y < rows -1; y++) {
             
@@ -103,7 +40,7 @@ public class WarpSurface {
             PVector y1_R = PVector.lerp(roi[1], roi[2], (float)(y+1) / (rows-1));
             
             beginShape(TRIANGLE_STRIP);
-            texture(img);
+            texture(canvas);
             for(int x = 0; x < cols; x++) {
                 
                 PVector x_y = PVector.lerp(y_L, y_R, (float)x / (cols-1));
@@ -176,6 +113,51 @@ public class WarpSurface {
             }
         }
         saveXML(settings, "warp.xml");
+    }
+    
+}
+
+
+public class Canvas extends PGraphics2D {
+
+    private PVector[] bounds;
+    private PVector[] roi;
+    
+    public Canvas(PApplet parent, int w, int h, PVector[] bounds) {
+        setParent(parent);
+        setPrimary(false);
+        setPath(parent.dataPath(""));
+        setSize(w, h);
+        
+        setBounds(bounds);
+        roi = new PVector[] {
+            new PVector(0, 0),
+            new PVector(this.width, 0),
+            new PVector(this.width, this.height),
+            new PVector(0, this.height)
+        };
+    }
+    
+    
+    public void setBounds(PVector[] bounds) {
+        if(bounds.length == 2) this.bounds = bounds;
+    }
+    
+    
+    public void setROI(PVector[] roi) {
+        if(roi.length == 4) {
+            for(int i = 0; i < 4; i++) {
+                this.roi[i] = new PVector(
+                    map(roi[i].y, bounds[0].y, bounds[1].y, 0, this.width),
+                    map(roi[i].x, bounds[0].x, bounds[1].x, this.height, 0)
+                );
+            }
+        }
+    }
+    
+    
+    public PVector[] getROI() {
+        return roi;
     }
     
 }
