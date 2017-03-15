@@ -11,37 +11,24 @@ PImage BG;
 boolean showBG = true;
 
 // PROJECTION 3D MODEL
-WarpSurface model3D;
+WarpSurface surface;
 Canvas canvas;
 
-/*
 // SIMULACIÓ FONS DE VALL
-final int simWidth = 1000;
-final int simHeight = 851;
+int simWidth = 1000;
+int simHeight = 847;
+final String roadsPath = "json/roads.geojson";
+final String bgPath = "img/bg/ortoEPSG3857_mini.jpg";
 final PVector[] bounds = new PVector[] {
     new PVector(42.482114, 1.489787),
     new PVector(42.533772, 1.572123)
 };
-final String roadsPath = "json/roads.geojson";
-final String bgPath = "img/bg/ortoEPSG3857_small.jpg";
-*/
-
-// SIMULACIÓ CITYSCOPE
-final int simWidth = 1000;
-final int simHeight = 745;
-final PVector[] bounds = new PVector[] {
-    new PVector(42.4955, 1.5095),
-    new PVector(42.5180, 1.5505)
-};
-final String roadsPath = "json/roads_cityscope.geojson";
-final String bgPath = "img/bg/orto_cityscope_small.jpg";
-final PVector[] roi = new PVector[] {
+PVector[] roi = new PVector[] {
     new PVector(42.505086, 1.509961),
     new PVector(42.517066, 1.544024),
     new PVector(42.508161, 1.549798),
     new PVector(42.496164, 1.515728)
 };
-
 
 
 void setup() {
@@ -53,18 +40,19 @@ void setup() {
     
     myFont = createFont("Montserrat-Light", 32);
     
-    model3D = new WarpSurface(this, 900, 300, 10, 5);
-    model3D.loadConfig();
-    canvas = new Canvas(this, simWidth, simHeight, bounds);
-    canvas.setROI(roi);
-    
     BG = loadImage(bgPath);
-    BG.resize(simWidth, simHeight);
+    //BG.resize(simWidth, simHeight);
+    simWidth = BG.width;
+    simHeight = BG.height;
+    
+    surface = new WarpSurface(this, 900, 300, 10, 5);
+    surface.loadConfig();
+    canvas = new Canvas(this, simWidth, simHeight, bounds, roi);
     
     roads = new Roads(roadsPath, simWidth, simHeight, bounds);
     
     pois = new POIs(this);
-    //pois.loadJSON("json/pois.json");
+    //pois.loadJSON("json/restaurants.json", roads);
     pois.loadCSV("restaurants_mini.tsv", roads);
     
     agents = new Agents(this);
@@ -106,8 +94,8 @@ void draw() {
     */
     
     canvas.endDraw();
-    image(canvas, 0, 0, simWidth, simHeight);
-    //model3D.draw(canvas);
+    //image(canvas, 0, 0);
+    surface.draw(canvas);
     
     fill(0);
     text(frameRate, 20, 20);
@@ -154,10 +142,10 @@ void keyPressed() {
             //if( model3D.isCalibrating() ) model3D.saveConfig();  // Avoid overriding tested calibration
             break;
         case 'l':
-            if( model3D.isCalibrating() ) model3D.loadConfig();
+            if( surface.isCalibrating() ) surface.loadConfig();
             break;
         case 'w':
-            model3D.toggleCalibration();
+            surface.toggleCalibration();
             break;
     }
     

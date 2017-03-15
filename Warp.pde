@@ -1,11 +1,29 @@
+/**
+* Generate a shape object that can be distorted using a bunch of control points to fit an irregular
+* 3D surface where a canvas is projected using a beamer
+* @author    Marc Vilella
+* @version   0.3
+*/
 public class WarpSurface {
     
     private PVector[][] points;
     private int cols, rows;
+    private PVector controlPoint;
     
     private boolean calibrateMode;
     
+    /**
+    * Construct a warp surface containing a grid of control points. By default thw surface
+    * is placed at the center of sketch
+    * @param parent    the sketch PApplet
+    * @param width     the surface width
+    * @param height    the surface height
+    * @param cols      the number of horizontal control points
+    * @param rows      the number of vertical control points
+    */
     public WarpSurface(PApplet parent, float width, float height, int cols, int rows) {
+        
+        parent.registerMethod("mouseEvent", this);
         
         this.cols = cols;
         this.rows = rows;
@@ -24,67 +42,55 @@ public class WarpSurface {
     }
 
     
-    //public void draw(WarpTexture wt) {
+    /**
+    * Draw the canvas in surface, warping it as a texture. While in
+    * calibration mode the control points can be moved with a mouse drag
+    * @param canvas    the canvas 
+    */
     public void draw(Canvas canvas) {
         
-        //PImage img = wt.getImage();
-        PVector[] roi = canvas.getROI();
+        float dX = canvas.width / (cols - 1);
+        float dY = canvas.height / (rows - 1);
         
         for(int y = 0; y < rows -1; y++) {
-            
-            // y line anchors
-            PVector y_L = PVector.lerp(roi[0], roi[3], (float)y / (rows-1));
-            PVector y_R = PVector.lerp(roi[1], roi[2], (float)y / (rows-1));
-            // (y+1) line anchors
-            PVector y1_L = PVector.lerp(roi[0], roi[3], (float)(y+1) / (rows-1));
-            PVector y1_R = PVector.lerp(roi[1], roi[2], (float)(y+1) / (rows-1));
-            
             beginShape(TRIANGLE_STRIP);
             texture(canvas);
             for(int x = 0; x < cols; x++) {
-                
-                PVector x_y = PVector.lerp(y_L, y_R, (float)x / (cols-1));
-                PVector x_y1 = PVector.lerp(y1_L, y1_R, (float)x / (cols-1));
                 
                 if(calibrateMode) {
                     stroke(#FF0000);
                     strokeWeight(0.5);
                 } else noStroke();
                 
-                vertex(points[y][x].x, points[y][x].y, x_y.x, x_y.y);
-                vertex(points[y+1][x].x, points[y+1][x].y, x_y1.x, x_y1.y);
+                vertex(points[y][x].x, points[y][x].y, x * dX, y * dY);
+                vertex(points[y+1][x].x, points[y+1][x].y, x * dX, (y+1) * dY);
             }
             endShape();
         }
         
-        if(calibrateMode) {
-           stroke(#FF0000); strokeWeight(1);
-           for(int y = 0; y < rows; y++) {
-                for(int x = 0; x < cols; x++) {
-                    int size = 7;
-                    if( dist(points[y][x].x, points[y][x].y, mouseX, mouseY) < 7 ) {
-                        fill(#FF0000, 100);
-                        size = 14;
-                        if(mousePressed) {
-                            points[y][x].x = mouseX;
-                            points[y][x].y = mouseY;
-                        }
-                    } else noFill();
-                    ellipse(points[y][x].x, points[y][x].y, size, size);
-                }
-            }
-        }
     }
     
+    
+    /**
+    * Toggle callibration mode of surface, allowing to drag and move control points
+    */
     public void toggleCalibration() {
         calibrateMode = !calibrateMode;
     }
     
+    
+    /**
+    * Return whether the surface is in calibration mode
+    * @return    true if surface is in calibration mode, false otherwise
+    */
     public boolean isCalibrating() {
         return calibrateMode;
     }
     
     
+    /**
+    * Load the position of control points from an XML file, by default "warp.xml"
+    */
     public void loadConfig() {
         XML settings = loadXML(sketchPath("warp.xml"));
         XML size = settings.getChild("size");
@@ -99,6 +105,10 @@ public class WarpSurface {
         }
     }
     
+    
+    /**
+    * Save the position of control points into an XML file, by default "warp.xml"
+    */
     public void saveConfig() {
         XML settings = new XML("settings");
         XML size = settings.addChild("size");
@@ -115,49 +125,99 @@ public class WarpSurface {
         saveXML(settings, "warp.xml");
     }
     
-}
-
-
-public class Canvas extends PGraphics2D {
-
-    private PVector[] bounds;
-    private PVector[] roi;
     
-    public Canvas(PApplet parent, int w, int h, PVector[] bounds) {
-        setParent(parent);
-        setPrimary(false);
-        setPath(parent.dataPath(""));
-        setSize(w, h);
-        
-        setBounds(bounds);
-        roi = new PVector[] {
-            new PVector(0, 0),
-            new PVector(this.width, 0),
-            new PVector(this.width, this.height),
-            new PVector(0, this.height)
-        };
-    }
-    
-    
-    public void setBounds(PVector[] bounds) {
-        if(bounds.length == 2) this.bounds = bounds;
-    }
-    
-    
-    public void setROI(PVector[] roi) {
-        if(roi.length == 4) {
-            for(int i = 0; i < 4; i++) {
-                this.roi[i] = new PVector(
-                    map(roi[i].y, bounds[0].y, bounds[1].y, 0, this.width),
-                    map(roi[i].x, bounds[0].x, bounds[1].x, this.height, 0)
-                );
-            }
+    /**
+    * Mouse event handler to perform control point dragging
+    * @param e    the mouse event
+    */
+    public void mouseEvent(MouseEvent e) {
+        switch(e.getAction()) {
+            
+            case MouseEvent.PRESS:
+                if(calibrateMode) {
+                    controlPoint = null;
+                    for(int y = 0; y < rows; y++) {
+                        for(int x = 0; x < cols; x++) {
+                            PVector mousePos = new PVector(mouseX, mouseY);
+                            if(mousePos.dist(points[y][x]) < 10) {
+                                controlPoint = points[y][x];
+                                break;
+                            }
+                        }
+                    }
+                }
+                break;
+                
+            case MouseEvent.DRAG:
+                if(calibrateMode && controlPoint != null) {
+                    controlPoint.x = mouseX;
+                    controlPoint.y = mouseY;
+                }
+                break;
         }
     }
     
+}
+
+
+
+/**
+* Extend graphic and rendering context to draw, by adding a Region Of Interest that is drawn into an
+* irregular surface
+* @author    Marc Vilella
+* @version   1.0
+*/
+public class Canvas extends PGraphics2D {
+
+    PVector origin;
+    float rotation;
     
-    public PVector[] getROI() {
-        return roi;
+    /**
+    * Construct a rendering context defining coordinates bounding box and its size.
+    * Bounding box is used as a reference for the Region of Interest (ROI) that will be
+    * displayed in the surface. All coordinates are in Lat/Lon format.
+    * @param parent    the sketch PApplet
+    * @param w         the bounding box width
+    * @param h         the bounding box height
+    * @param bounds    the bounding box coordinates. First coordinate is BOTTOM-LEFT and second TOP-RIGHT
+    * @param roi       the Region of Interest. Clockwise starting by TOP-LEFT
+    */
+    public Canvas(PApplet parent, int w, int h, PVector[] bounds, PVector[] roi) {
+        
+        PVector[] roiPx = new PVector[roi.length];
+        for(int i = 0; i < roi.length; i++) {
+            roiPx[i] = new PVector(
+                map(roi[i].y, bounds[0].y, bounds[1].y, 0, w),
+                map(roi[i].x, bounds[0].x, bounds[1].x, h, 0)
+            );
+        }
+        origin = roiPx[0];
+        
+        int canvasWidth = (int)roiPx[0].dist(roiPx[1]);
+        int canvasHeight = (int)roiPx[1].dist(roiPx[2]);
+        
+        rotation = PVector.angleBetween( PVector.sub(roiPx[1], roiPx[0]), new PVector(1,0) );
+        println(degrees(rotation));
+        
+        setParent(parent);
+        setPrimary(false);
+        setPath(parent.dataPath(""));
+        setSize(canvasWidth, canvasHeight);
+        
+    }
+
+    
+    @Override
+    public void beginDraw() {
+        super.beginDraw();
+        this.pushMatrix();
+        this.rotate(rotation);
+        this.translate(-origin.x, -origin.y);
     }
     
+    @Override void endDraw() {
+        this.popMatrix();
+        super.endDraw();
+    }
+
 }
