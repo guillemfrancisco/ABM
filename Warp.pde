@@ -62,8 +62,8 @@ public class WarpSurface {
                     strokeWeight(0.5);
                 } else noStroke();
                 
-                vertex(points[y][x].x, points[y][x].y, x * dX, y * dY);
-                vertex(points[y+1][x].x, points[y+1][x].y, x * dX, (y+1) * dY);
+                vertex(points[y][x].x, points[y][x].y, canvas.width - x * dX, canvas.height - y * dY);
+                vertex(points[y+1][x].x, points[y+1][x].y, canvas.width - x * dX, canvas.height - (y+1) * dY);
             }
             endShape();
         }
@@ -123,6 +123,7 @@ public class WarpSurface {
             }
         }
         saveXML(settings, "warp.xml");
+        println("Warp configuration saved");
     }
     
     
@@ -197,7 +198,6 @@ public class Canvas extends PGraphics2D {
         int canvasHeight = (int)roiPx[1].dist(roiPx[2]);
         
         rotation = PVector.angleBetween( PVector.sub(roiPx[1], roiPx[0]), new PVector(1,0) );
-        println(degrees(rotation));
         
         setParent(parent);
         setPrimary(false);
