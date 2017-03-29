@@ -36,36 +36,25 @@ private class POIFactory extends Factory {
         ArrayList<POI> pois = new ArrayList();
         int count = count();
         
-        JSONArray clusters = loadJSONArray(JSONFile);
-        for(int i = 0; i < clusters.size(); i++) {
-            JSONObject cluster = clusters.getJSONObject(i);
+        JSONArray JSONPois = loadJSONObject(JSONFile).getJSONArray("features");
+        for(int i = 0; i < JSONPois.size(); i++) {
+            JSONObject poi = JSONPois.getJSONObject(i);
             
-            String type        = cluster.getString("type");
-            String clusterName = cluster.getString("name");
-            JSONObject style   = cluster.getJSONObject("style");
-            String tint        = style.getString("color");
-            int size           = style.getInt("size");
+            JSONObject props = poi.getJSONObject("properties");
             
-            JSONArray items   = cluster.getJSONArray("items");
-            for(int j = 0; j < items.size(); j++) {
-                JSONObject item = items.getJSONObject(j);
+            String name      = props.isNull("NAME") ? "null" : props.getString("NAME");
+            int capacity  = props.isNull("CAPACITY") ? null : props.getInt("CAPACITY");
+            boolean cluster  = props.isNull("CLUSTER") ? false : props.getInt("CLUSTER") == 1 ? true : false;
+            
+            JSONArray coords = poi.getJSONObject("geometry").getJSONArray("coordinates");
+            PVector location = roads.toXY( coords.getFloat(1), coords.getFloat(0) );
                 
-                int id              = item.getInt("id");
-                String name         = item.getString("name");
-                PVector location    = roads.toXY(
-                                        item.getJSONArray("location").getFloat(1),
-                                        item.getJSONArray("location").getFloat(0)
-                                    );
-                int capacity        = item.getInt("capacity");
-                JSONArray languages = item.getJSONArray("languages");
-                
-                if( location != null ) {
-                    pois.add( new POI(roads, count, location, name, capacity) );
-                    counter.increment(clusterName);
-                    count++;
-                }
-                
+            if( roads.contains(location) ) {
+                pois.add( new POI(roads, count, location, name, capacity) );
+                counter.increment("restaurant");
+                count++;
             }
+             
         }
         println("LOADED");
         return pois;  
@@ -89,7 +78,7 @@ private class POIFactory extends Factory {
             int capacity        = row.getInt("CAPACITY");
             int size            = 3;
             
-            if( location != null ) {
+            if( roads.contains(location) ) {
                 pois.add( new POI(roads, count, location, name, capacity) );
                 counter.increment(path); 
                 count++;
@@ -108,17 +97,14 @@ private class POIFactory extends Factory {
 * @author        Marc Vilella
 * @version       2.0
 */
-public class POI implements Placeable {
+public class POI extends Node {
 
-    private final int ID;
+    private final int POI_ID;
     private final String NAME;
-    private final PVector POSITION;
     private final int CAPACITY;
-    private Node NODE;
     
     private ArrayList<Agent> crowd = new ArrayList();
     private float occupancy;
-    private boolean selected;
     
     private float size = 2;
     
@@ -132,38 +118,11 @@ public class POI implements Placeable {
     * @param capacity  Customers capacity of the POI
     */
     public POI(Roads roads, int id, PVector position, String name, int capacity) {
-        ID = id;
+        super(position);
+        POI_ID = id;
         NAME = name;
         CAPACITY = capacity;
-        POSITION = position;
-        place(roads);
-    }
-    
-    
-    /**
-    * Create a node in the roadmap linked to the POI and connects it to the closest lane
-    * @param roads  Roadmap to add the POI
-    */
-    public void place(Roads roads) {
-        NODE = roads.connect(POSITION);
-    } 
-    
-    
-    /**
-    * Get POI position in screen
-    * @return POI position
-    */
-    public PVector getPosition() {
-        return POSITION;
-    }
-    
-    
-    /**
-    * Get POI associated node
-    * @return associated node
-    */
-    public Node getNode() {
-        return NODE;
+        roads.connect(this);
     }
     
     
@@ -214,16 +173,18 @@ public class POI implements Placeable {
     * Draw POI in screen, with different effects depending on its status
     * @param canvas  Canvas to draw POI
     */
+    @Override
     public void draw(PGraphics canvas) {
         
+        /*
         color c = lerpColor(#77DD77, #FF6666, occupancy);
         
         canvas.rectMode(CENTER); canvas.noFill(); canvas.stroke(c); canvas.strokeWeight(2);
-        canvas.rect(POSITION.x, POSITION.y, size, size);
-        
+        canvas.rect(position.x, position.y, size, size);
+        */
         if( selected ) {
             canvas.fill(0); canvas.textAlign(CENTER, BOTTOM);
-            canvas.text(this.toString(), POSITION.x, POSITION.y - size / 2);
+            canvas.text(this.toString(), position.x, position.y - size / 2);
         }
 
     }
@@ -235,8 +196,9 @@ public class POI implements Placeable {
     * @param mouseY  Vertical mouse position in screen
     * @return true if POI is selected, false otherwise
     */
+    @Override
     public boolean select(int mouseX, int mouseY) {
-        selected = dist(POSITION.x, POSITION.y, mouseX, mouseY) <= size;
+        selected = dist(position.x, position.y, mouseX, mouseY) <= size;
         return selected;
     }
     
@@ -245,9 +207,11 @@ public class POI implements Placeable {
     * Return agent description (NAME, OCCUPANCY and CAPACITY)
     * @return POI description
     */
+    @Override
     public String toString() {
         return NAME + " [" + crowd.size() + " / " + CAPACITY + "]";
     }
     
 
+}
 }

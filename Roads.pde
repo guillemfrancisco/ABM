@@ -118,23 +118,21 @@ public class Roads {
     * @return new created node, already connected to roadmap
     */
     private Node connect(PVector position) {
+    private void connect(Node node) {
         
-        Lane closestLane = findClosestLane(position);
+        Lane closestLane = findClosestLane(node.getPosition());
         Lane closestLaneBack = closestLane.findContrariwise();
+        PVector closestPoint = closestLane.findClosestPoint(node.getPosition());
         
-        Node connectionNode = new Node(closestLane.findClosestPoint(position));
+        Node connectionNode = new Node(closestPoint);
         closestLane.split(connectionNode);
         if(closestLaneBack != null) closestLaneBack.split(connectionNode);
         connectionNode.place(this);
             
-        Node node = new Node(position);
         node.connectBoth(connectionNode, null, "Access");
         node.place(this);
         
-        return node;
-        
     }
-
 
     public int size() {
         return nodes.size();
@@ -163,6 +161,11 @@ public class Roads {
             map(lat, bounds[0].x, bounds[1].x, window.y, 0)
         );
         
+    }
+    
+    
+    public boolean contains(PVector point) {
+        return point.x > 0 && point.x < window.x && point.y > 0 && point.y < window.y;
     }
     
     

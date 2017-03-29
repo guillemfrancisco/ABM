@@ -7,10 +7,10 @@
 */
 private class Node implements Placeable, Comparable<Node> {
 
-    private int id;
+    protected int id;
     protected PVector position;
-    private ArrayList<Lane> lanes = new ArrayList();
-    private boolean selected;
+    protected ArrayList<Lane> lanes = new ArrayList();
+    protected boolean selected;
     
     // Pathfinding variables
     private Node parent;

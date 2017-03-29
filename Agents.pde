@@ -214,7 +214,7 @@ public abstract class Agent implements Placeable {
         path.reset();
         arrived = false;
         POI newDestination = null;
-        while(newDestination == null || inNode.equals(newDestination.getNode())) {
+        while(newDestination == null || inNode.equals(newDestination)) {
             newDestination = (POI) pois.getRandom();    // Random POI for the moment
         }
         return newDestination;
@@ -227,7 +227,7 @@ public abstract class Agent implements Placeable {
     */
     public void move(float speed) {
         if(!arrived) {
-            if(!path.available()) panicMode = !path.findPath(inNode, destination.getNode());
+            if(!path.available()) panicMode = !path.findPath(inNode, destination);
             else {
                 PVector movement = path.move(pos, speed * speedFactor);
                 pos.add( movement );
