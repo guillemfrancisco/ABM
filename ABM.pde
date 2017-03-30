@@ -62,7 +62,7 @@ void setup() {
     pois.add(new Cluster(roads, "stjulia", "Sant Julià de Lòria", new PVector(100, 820), null, 300));
     
     agents = new Agents(this);
-    agents.loadJSON("json/clusters.json", roads);
+    agents.loadJSON("json/agents.json", roads);
     agents.setSpeed(0.1, 5);
     
     heatmap = new Heatmap(0, 0, simWidth, simHeight);

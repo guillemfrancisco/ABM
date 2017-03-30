@@ -82,16 +82,16 @@ private class AgentFactory extends Factory {
         ArrayList<Agent> agents = new ArrayList();
         int count = count();
         
-        JSONArray clusters = loadJSONObject(file).getJSONArray("clusters");
-        for(int i = 0; i < clusters.size(); i++) {
-            JSONObject cluster = clusters.getJSONObject(i);
+        JSONArray JSONagents = loadJSONObject(file).getJSONArray("agents");
+        for(int i = 0; i < JSONagents.size(); i++) {
+            JSONObject agentGroup = JSONagents.getJSONObject(i);
             
-            int id            = cluster.getInt("id");
-            String name       = cluster.getString("name");
-            String type       = cluster.getString("type");
-            int amount        = cluster.getInt("amount");
+            int id            = agentGroup.getInt("id");
+            String name       = agentGroup.getString("name");
+            String type       = agentGroup.getString("type");
+            int amount        = agentGroup.getInt("amount");
             
-            JSONObject style  = cluster.getJSONObject("style");
+            JSONObject style  = agentGroup.getJSONObject("style");
             String tint       = style.getString("color");
             int size          = style.getInt("size");
             
