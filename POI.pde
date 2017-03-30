@@ -50,7 +50,7 @@ private class POIFactory extends Factory {
             PVector location = roads.toXY( coords.getFloat(1), coords.getFloat(0) );
                 
             if( roads.contains(location) ) {
-                pois.add( new POI(roads, count, location, name, capacity) );
+                pois.add( new POI(roads, str(count), name, location, capacity) );
                 counter.increment("restaurant");
                 count++;
             }
@@ -79,7 +79,7 @@ private class POIFactory extends Factory {
             int size            = 3;
             
             if( roads.contains(location) ) {
-                pois.add( new POI(roads, count, location, name, capacity) );
+                pois.add( new POI(roads, str(count), name, location, capacity) );
                 counter.increment(path); 
                 count++;
             }
@@ -99,29 +99,40 @@ private class POIFactory extends Factory {
 */
 public class POI extends Node {
 
-    private final int POI_ID;
-    private final String NAME;
-    private final int CAPACITY;
+    protected final String ID;
+    protected final String NAME;
+    protected final int CAPACITY;
     
-    private ArrayList<Agent> crowd = new ArrayList();
-    private float occupancy;
+    protected ArrayList<Agent> crowd = new ArrayList();
+    protected float occupancy;
     
     private float size = 2;
     
     
     /**
     * Initiate POI with specific name and capacity, and places it in the roadmap
-    * @param roads  Roadmap to place the POI
-    * @param id  ID of the POI
-    * @param position  Position of the POI
-    * @param name  name of the POI
-    * @param capacity  Customers capacity of the POI
+    * @param roads      Roadmap to place the POI
+    * @param id         ID of the POI
+    * @param position   Position of the POI
+    * @param name       Name of the POI
+    * @param capacity   Customers capacity of the POI
     */
-    public POI(Roads roads, int id, PVector position, String name, int capacity) {
+    public POI(Roads roads, String id, String name, PVector position, int capacity) {
         super(position);
-        POI_ID = id;
+        ID = id;
         NAME = name;
         CAPACITY = capacity;
+        
+        place(roads);
+    }
+    
+    
+    /**
+    * Place POI into roadmap, connected to closest point
+    * @param roads    Roadmap to place the POI
+    */
+    @Override
+    public void place(Roads roads) {
         roads.connect(this);
     }
     
@@ -171,20 +182,21 @@ public class POI extends Node {
     
     /**
     * Draw POI in screen, with different effects depending on its status
-    * @param canvas  Canvas to draw POI
+    * @param canvas  Canvas to draw node
+    * @param stroke  Lane width in pixels
+    * @param c  Lanes color
     */
     @Override
-    public void draw(PGraphics canvas) {
+    public void draw(PGraphics canvas, int stroke, color c) {
         
-        /*
-        color c = lerpColor(#77DD77, #FF6666, occupancy);
+        color occColor = lerpColor(#77DD77, #FF6666, occupancy);
         
-        canvas.rectMode(CENTER); canvas.noFill(); canvas.stroke(c); canvas.strokeWeight(2);
-        canvas.rect(position.x, position.y, size, size);
-        */
+        canvas.rectMode(CENTER); canvas.noFill(); canvas.stroke(occColor); canvas.strokeWeight(2);
+        canvas.rect(POSITION.x, POSITION.y, size, size);
+        
         if( selected ) {
             canvas.fill(0); canvas.textAlign(CENTER, BOTTOM);
-            canvas.text(this.toString(), position.x, position.y - size / 2);
+            canvas.text(this.toString(), POSITION.x, POSITION.y - size / 2);
         }
 
     }
@@ -198,7 +210,7 @@ public class POI extends Node {
     */
     @Override
     public boolean select(int mouseX, int mouseY) {
-        selected = dist(position.x, position.y, mouseX, mouseY) <= size;
+        selected = dist(POSITION.x, POSITION.y, mouseX, mouseY) <= size;
         return selected;
     }
     
@@ -212,6 +224,65 @@ public class POI extends Node {
         return NAME + " [" + crowd.size() + " / " + CAPACITY + "]";
     }
     
-
 }
+
+
+/**
+* Cluster - Agrupation of POIs, that combines all their characteristics and has a bigger attraction effect. Its position in canvas
+* is not defined in geographic files (GeoJSON) but by the user, and connect not the closest roadmap point but to a specific node that
+* has a defined "direction" field that matchs with cluster id. Clusters can be chained with other Clusters.
+* @author    Marc Vilella
+* @version   1.0
+* @see       POI
+*/
+public class Cluster extends POI {
+    
+    /**
+    * Initiate Cluster with specific POI characteristics plus an id to connect to a specific node
+    * @param roads     Roadmap to place the Cluster
+    * @param id        ID of the Cluster
+    * @param name      Name of the Cluster
+    * @param position  Position of the Cluster
+    * @param direction Next cluster to connect (if any)   
+    * @param capacity  Customers capacity of the Cluster
+    */
+    public Cluster(Roads roads, String id, String name, PVector position, String direction, int capacity) {
+        super(roads, id, name, position, capacity);
+        setDirection(direction);
+    }
+    
+    
+    /**
+    * Place Cluster into roadmap, connected to specific node
+    * @param roads    Roadmap to place the POI
+    */
+    @Override
+    public void place(Roads roads) {
+        for(Node node : roads.nodes) {
+            if(node.direction != null && ID.equals(node.direction)) {
+                node.connectBoth(this, null, "Connection");
+                roads.add(this);
+                break;
+            }
+        }
+    }
+    
+    
+    /**
+    * Draw CLuster in screen
+    * @param canvas  Canvas to draw node
+    * @param stroke  Lane width in pixels
+    * @param c  Lanes color
+    */
+    @Override
+    public void draw(PGraphics canvas, int stroke, color c) {
+        canvas.ellipseMode(CENTER); canvas.noFill(); canvas.stroke(c); canvas.strokeWeight(2);
+        canvas.ellipse(POSITION.x, POSITION.y, 75, 75);
+        canvas.textAlign(CENTER, TOP); canvas.textSize(9); canvas.fill(c);
+        canvas.text(NAME, POSITION.x, POSITION.y);
+        for(Lane lane : lanes) {
+            lane.draw(canvas, stroke, c);
+        }
+    }
+    
 }

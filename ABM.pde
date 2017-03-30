@@ -13,15 +13,16 @@ boolean showBG = true;
 // PROJECTION 3D MODEL
 WarpSurface surface;
 Canvas canvas;
+//PGraphics canvas;
 
 // SIMULACIÓ FONS DE VALL
 int simWidth = 1000;
 int simHeight = 847;
 final String roadsPath = "json/roads.geojson";
-final String bgPath = "img/bg/ortoEPSG3857_mini.jpg";
+final String bgPath = "img/bg/orto_small.jpg";
 final PVector[] bounds = new PVector[] {
-    new PVector(42.482114, 1.489787),
-    new PVector(42.533772, 1.572123)
+    new PVector(42.482119, 1.489794),
+    new PVector(42.533768, 1.572122)
 };
 PVector[] roi = new PVector[] {
     new PVector(42.505086, 1.509961),
@@ -34,26 +35,31 @@ PVector[] roi = new PVector[] {
 void setup() {
     
     //size(1000, 745, P2D);
-    fullScreen(P2D);
-    pixelDensity(2);
+    fullScreen(P2D,1);
+    //pixelDensity(2);
     smooth();
     
     myFont = createFont("Montserrat-Light", 32);
     
     BG = loadImage(bgPath);
-    //BG.resize(simWidth, simHeight);
     simWidth = BG.width;
     simHeight = BG.height;
     
     surface = new WarpSurface(this, 900, 300, 10, 5);
     surface.loadConfig();
     canvas = new Canvas(this, simWidth, simHeight, bounds, roi);
+    //canvas = createGraphics(simWidth, simHeight);
     
     roads = new Roads(roadsPath, simWidth, simHeight, bounds);
     
     pois = new POIs(this);
     //pois.loadJSON("json/restaurants.json", roads);
-    pois.loadCSV("restaurants_mini.tsv", roads);
+    pois.loadCSV("restaurants.tsv", roads);
+    pois.add(new Cluster(roads, "encamp", "Encamp", new PVector(910, 120), "canillo", 300));
+    pois.add(new Cluster(roads, "canillo", "Canillo", new PVector(950, 50), null, 300));
+    pois.add(new Cluster(roads, "lamassana", "La Massana", new PVector(500, 30), "ordino", 300));
+    pois.add(new Cluster(roads, "ordino", "Ordino", new PVector(600, 50), null, 300));
+    pois.add(new Cluster(roads, "stjulia", "Sant Julià de Lòria", new PVector(100, 820), null, 300));
     
     agents = new Agents(this);
     agents.loadJSON("json/clusters.json", roads);
@@ -63,7 +69,7 @@ void setup() {
     heatmap.setBrush("img/heatmap/brush_80x80.png", 40);
     heatmap.addGradient("heat", "img/heatmap/heat.png");
     heatmap.addGradient("cool", "img/heatmap/cool.png");
-    
+
 }
 
 
@@ -77,9 +83,9 @@ void draw() {
     canvas.background(255);
     
     if(showBG) canvas.image(BG, 0, 0);
-    else roads.draw(canvas, 1, #F0F3F5);
+    else roads.draw(canvas, 1, #E0E3E5);
     
-    pois.draw(canvas);
+    //pois.draw(canvas);
     agents.draw(canvas);
     heatmap.draw(canvas, width - 135, height - 50);
     
@@ -92,14 +98,13 @@ void draw() {
     fill(0);
     text("Agents moving: " + agents.count(Filters.isMoving(false)), 20, 200);
     */
-    
+
     canvas.endDraw();
     //image(canvas, 0, 0);
     surface.draw(canvas);
     
     fill(0);
     text(frameRate, 20, 20);
-    
 }
 
 
@@ -139,7 +144,7 @@ void keyPressed() {
             break;
         
         case 's':
-            //if( model3D.isCalibrating() ) model3D.saveConfig();  // Avoid overriding tested calibration
+            //if( surface.isCalibrating() ) surface.saveConfig();  // Avoid overriding tested calibration
             break;
         case 'l':
             if( surface.isCalibrating() ) surface.loadConfig();

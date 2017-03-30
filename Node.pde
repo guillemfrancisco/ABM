@@ -8,9 +8,10 @@
 private class Node implements Placeable, Comparable<Node> {
 
     protected int id;
-    protected PVector position;
+    protected final PVector POSITION;
     protected ArrayList<Lane> lanes = new ArrayList();
     protected boolean selected;
+    private String direction = null;
     
     // Pathfinding variables
     private Node parent;
@@ -24,7 +25,16 @@ private class Node implements Placeable, Comparable<Node> {
     */
     public Node(PVector position) {
         id = -1;
-        this.position = position;
+        this.POSITION = position;
+    }
+    
+    
+    /**
+    * Set node ID
+    * @param id    ID of the node
+    */
+    public void setID(int id) {
+        this.id = id;
     }
     
     
@@ -38,14 +48,11 @@ private class Node implements Placeable, Comparable<Node> {
     
     
     /**
-    * Save node into roadmap. ID is assigned as the nodes' count
+    * Save node into roadmap.
     * @param roads  Roadmap to add node
     */
     public void place(Roads roads) {
-        if(id == -1) {
-            id = roads.size();
-            roads.add(this);
-        }
+        roads.add(this);
     }
     
     
@@ -54,7 +61,7 @@ private class Node implements Placeable, Comparable<Node> {
     * @return node position
     */
     public PVector getPosition() {
-        return position.copy();
+        return POSITION.copy();
     }
     
     
@@ -110,6 +117,15 @@ private class Node implements Placeable, Comparable<Node> {
         node.connect(this, vertices, name);
     }
 
+    
+    /**
+    * Set the direction of the street (to connect a Cluster to this node) 
+    * @param direction  Cluster direction ID
+    */
+    protected void setDirection(String direction) {
+        this.direction = direction;
+    }
+
 
     /**
     * Draw the node and outbound lanes with default colors
@@ -117,13 +133,14 @@ private class Node implements Placeable, Comparable<Node> {
     */
     public void draw(PGraphics canvas) {
         canvas.fill(#000000); 
-        canvas.ellipse(position.x, position.y, 3, 3);
+        canvas.ellipse(POSITION.x, POSITION.y, 3, 3);
         draw(canvas, 1, #F0F3F5);
     }
     
     
     /**
     * Draw outbound lanes with specified colors
+    * @param canvas  Canvas to draw node
     * @param stroke  Lane width in pixels
     * @param c  Lanes color
     */
@@ -141,7 +158,7 @@ private class Node implements Placeable, Comparable<Node> {
     * @return true if node is selected, false otherwise
     */
     public boolean select(int mouseX, int mouseY) {
-        selected = dist(position.x, position.y, mouseX, mouseY) < 2;
+        selected = dist(POSITION.x, POSITION.y, mouseX, mouseY) < 2;
         return selected;
     }
     
@@ -167,7 +184,7 @@ private class Node implements Placeable, Comparable<Node> {
     }
     
     public void setF(Node nextNode) {
-        float h =  position.dist(nextNode.getPosition());
+        float h =  POSITION.dist(nextNode.getPosition());
         f = g + h;
     }
     
@@ -187,7 +204,7 @@ private class Node implements Placeable, Comparable<Node> {
     */
     @Override
     public String toString() {
-        return id + ": " + position + " [" + lanes.size() + "]"; 
+        return id + ": " + POSITION + " [" + lanes.size() + "]"; 
     }
     
     

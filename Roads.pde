@@ -21,7 +21,6 @@ public class Roads {
         
         window = new PVector(x, y);
         this.bounds = bounds;
-        //bounds = findBounds(file);
         
         print("Loading roads network... ");
         JSONObject roadNetwork = loadJSONObject(file);
@@ -33,6 +32,7 @@ public class Roads {
             String type = props.isNull("type") ? "null" : props.getString("type");
             String name = props.isNull("name") ? "null" : props.getString("name");
             boolean oneWay = props.isNull("oneway") ? false : props.getInt("oneway") == 1 ? true : false;
+            String direction = props.isNull("direction") ? null : props.getString("direction");
       
             JSONArray points = lane.getJSONObject("geometry").getJSONArray("coordinates");
             
@@ -42,7 +42,7 @@ public class Roads {
             
                 PVector point = toXY(points.getJSONArray(j).getFloat(1), points.getJSONArray(j).getFloat(0));
                 
-                if(point != null) {
+                if( contains(point) ) {
                     vertices.add(point);
                     
                     Node currNode = getNodeIfVertex(point);
@@ -63,25 +63,13 @@ public class Roads {
                         if(oneWay) prevNode.connect(currNode, vertices, name);
                         else prevNode.connectBoth(currNode, vertices, name);
                         currNode.place(this);
+                        if(direction != null) currNode.setDirection(direction);
                     }
-                } else {
-                    println("POINT " + i + " (" + point + ") is out ");
                 }
                 
             }
         }
         println("LOADED");
-        
-        /*
-        Path debugPath = new Path(this, null);
-        for(Node n1 : nodes) {
-            for(Node n2 : nodes) {
-                if(!n1.equals(n2)) {
-                    if(!debugPath.findPath(n1, n2)) println("CANNOT GO FROM " + n1.id + " TO " + n2.id);
-                }
-            }
-        }
-        */
         
     }
 
@@ -112,12 +100,6 @@ public class Roads {
     }
 
 
-    /**
-    * Create a node in specified position and connects it to the roadmap through a node in the closest street point
-    * @param position  Position of place to connect
-    * @return new created node, already connected to roadmap
-    */
-    private Node connect(PVector position) {
     private void connect(Node node) {
         
         Lane closestLane = findClosestLane(node.getPosition());
@@ -127,19 +109,32 @@ public class Roads {
         Node connectionNode = new Node(closestPoint);
         closestLane.split(connectionNode);
         if(closestLaneBack != null) closestLaneBack.split(connectionNode);
-        connectionNode.place(this);
-            
+        add(connectionNode);
+        
         node.connectBoth(connectionNode, null, "Access");
-        node.place(this);
+        add(node);
         
     }
-
+    
+    /*
+    private void connect(SuperPOI sPOI) {
+        for(Node n : nodes) {
+            if(n.direction != null && n.direction.equals(sPOI.ref)) {
+                sPOI.connectBoth(n, null, "Carretera");
+                sPOI.place(this);
+                break;
+            }
+        }
+    }
+    */
+    
     public int size() {
         return nodes.size();
     }
 
 
     public void add(Node node) {
+        node.setID(nodes.size());
         nodes.add(node);
     }
 
@@ -155,12 +150,10 @@ public class Roads {
     
 
     public PVector toXY(float lat, float lon) {
-        if(lat < bounds[0].x || lat > bounds[1].x || lon < bounds[0].y || lon > bounds[1].y) return null;
         return new PVector(
             map(lon, bounds[0].y, bounds[1].y, 0, window.x),
             map(lat, bounds[0].x, bounds[1].x, window.y, 0)
         );
-        
     }
     
     

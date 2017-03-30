@@ -118,6 +118,15 @@ public abstract class Facade {
     
     
     /**
+    * Add new item to items list
+    * @param item  Item to add
+    */
+    public void add(Placeable item) {
+        items.add(item);
+    }
+    
+    
+    /**
     * Print item's legend in a specific position
     * @param canvas  Canvas to draw legend
     * @param x  Horizontal position in screen
