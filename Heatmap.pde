@@ -181,16 +181,16 @@ public class Heatmap {
             canvas.popStyle();
             
             //Legend
-            canvas.pushMatrix();
-            canvas.translate(x, y);
-            canvas.fill(#888888); canvas.noStroke(); canvas.textSize(10); canvas.textAlign(LEFT,BOTTOM);
-            canvas.text(title, 0, 0);
-            canvas.textSize(8); canvas.textAlign(LEFT, TOP);
-            canvas.text("0", 0, 13);
-            canvas.textAlign(RIGHT, TOP);
-            canvas.text(round(maxValue), 100, 13);
-            canvas.image(gradients.get(useGradient), 0, 3, 100, 10);
-            canvas.popMatrix();
+            pushMatrix();
+            translate(x, y);
+            fill(#888888); noStroke(); textSize(10); textAlign(LEFT,BOTTOM);
+            text(title, 0, 0);
+            textSize(8); textAlign(LEFT, TOP);
+            text("0", 0, 13);
+            textAlign(RIGHT, TOP);
+            text(round(maxValue), 100, 13);
+            image(gradients.get(useGradient), 0, 3, 100, 10);
+            popMatrix();
         }
     }  
   
