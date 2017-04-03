@@ -4,7 +4,7 @@
 * @version       1.0
 * @see           Facade
 */
-public class Agents extends Facade {
+public class Agents extends Facade<Agent> {
     
     private float speed;
     private float maxSpeed = 5; 
@@ -14,8 +14,7 @@ public class Agents extends Facade {
     * Initiate agents facade and agents' Factory
     * @param parent  Sketch applet, just put this when calling constructor
     */
-    public Agents(PApplet parent) {
-        super(parent);
+    public Agents() {
         factory = new AgentFactory();
     }
 
@@ -54,8 +53,7 @@ public class Agents extends Facade {
     * @see Agent
     */
     public void move() {
-        for(Placeable item : items) {
-            Agent agent = (Agent) item;
+        for(Agent agent : items) {
             agent.move(speed);
         }
     }
@@ -112,14 +110,6 @@ private class AgentFactory extends Factory {
         return agents;
     }
     
-    
-    /**
-    * Create agents form CSV file
-    */
-    public ArrayList<Agent> loadCSV(String path, Roads roads) {
-        return new ArrayList();
-    }
-    
 }
 
 
@@ -167,16 +157,7 @@ public abstract class Agent implements Placeable {
         place(roads);
         destination = findDestination();
     }
-    
-    
-    /** 
-    * Get Agent ID
-    * @return ID of the agent
-    */
-    public int getID() {
-        return ID;
-    }
-    
+
     
     /**
     * Place agent in roadmap. Random node by default

@@ -4,21 +4,11 @@
 * @version       1.0
 * @see           Factory
 */
-public abstract class Facade {
+public abstract class Facade<T extends Placeable> {
     
-    protected PApplet parent;
-    protected Factory factory;
-    protected ArrayList<Placeable> items = new ArrayList();
-    
-    
-    /**
-    * Initiate Facade to work with specific roadmap
-    * @param parent  Sketch applet, just put this when calling constructor
-    */
-    public Facade(PApplet parent) {
-        this.parent = parent;
-    }
-    
+    protected Factory<T> factory;
+    protected ArrayList<T> items = new ArrayList<T>();
+
     
     /**
     * Count the total amount of items
@@ -34,7 +24,7 @@ public abstract class Facade {
     * @param predicate  Predicate condition
     * @return amount of items matching with condition
     */
-    public <T> int count(Predicate<T> predicate) {
+    public int count(Predicate<T> predicate) {
         return filter(predicate).size();
     }
     
@@ -42,12 +32,11 @@ public abstract class Facade {
     /**
     * Filter items by a specific condition
     * @param predicate  Predicate condition
-    * @return list of all items matching with condition
+    * @return all items matching with condition
     */
-    public <T> ArrayList<T> filter(Predicate<T> predicate) {
+    public ArrayList<T> filter(Predicate<T> predicate) {
         ArrayList<T> result = new ArrayList();
-        for(int i = 0; i < items.size(); i++) {
-            T item = (T) items.get(i);
+        for(T item : items) {
             if(predicate.evaluate(item)) result.add(item);
         }
         return result;
@@ -58,7 +47,7 @@ public abstract class Facade {
     * Get all items
     * @return list with all items
     */
-    public ArrayList getAll() {
+    public ArrayList<T> getAll() {
         return items;
     }
     
@@ -67,7 +56,7 @@ public abstract class Facade {
     * Get a random item
     * @return random item
     */
-    public Placeable getRandom() {
+    public T getRandom() {
         int i = round(random(0, items.size()-1));
         return items.get(i);
     }
@@ -78,7 +67,7 @@ public abstract class Facade {
     * @param canvas  Canvas to draw items
     */
     public void draw(PGraphics canvas) {
-        for(Placeable item : items) item.draw(canvas);
+        for(T item : items) item.draw(canvas);
     }
     
     
@@ -88,7 +77,7 @@ public abstract class Facade {
     * @param mouseY  Vertical mouse position in screen
     */
     public void select(int mouseX, int mouseY) {
-        for(Placeable item : items) item.select(mouseX, mouseY);
+        for(T item : items) item.select(mouseX, mouseY);
     }
 
     
@@ -102,26 +91,13 @@ public abstract class Facade {
         if( !file.exists() ) println("ERROR! JSON file does not exist");
         else items.addAll( factory.loadJSON(file, roadmap) );
     }
-    
-    
-    /**
-    * Create new items from a CSV file, if it exists
-    * @param path  Path to CSV file with items definitions
-    * @param roads  Roadmap where objects will be added
-    */
-    public void loadCSV(String path, Roads roadmap) {
-        File file = new File( dataPath(path) );
-        if( !file.exists() ) println("ERROR! CSV file does not exist");
-        else items.addAll( factory.loadCSV(path, roadmap) );
-    
-    }
-    
+
     
     /**
     * Add new item to items list
     * @param item  Item to add
     */
-    public void add(Placeable item) {
+    public void add(T item) {
         items.add(item);
     }
     
@@ -149,7 +125,7 @@ public abstract class Facade {
 * @author        Marc Vilella
 * @version       1.0
 */
-public abstract class Factory {
+public abstract class Factory<T> {
     
     protected IntDict counter = new IntDict();
     
@@ -179,15 +155,6 @@ public abstract class Factory {
     * @param roads  Roadmap where objects will be added
     * @return list with new created objects 
     */
-    public abstract ArrayList loadJSON(File file, Roads roads);
-    
-    
-    /**
-    * Create objects form CSV file
-    * @param path  Path to CSV file with object definitions
-    * @param roads  Roadmap where objects will be added
-    * @return list with new created object 
-    */
-    public abstract ArrayList loadCSV(String path, Roads roads);
+    public abstract ArrayList<T> loadJSON(File file, Roads roads);
     
 }

@@ -52,16 +52,15 @@ void setup() {
     
     roads = new Roads(roadsPath, simWidth, simHeight, bounds);
     
-    pois = new POIs(this);
-    //pois.loadJSON("json/restaurants.json", roads);
-    pois.loadCSV("restaurants.tsv", roads);
+    pois = new POIs();
+    pois.loadJSON("json/restaurants.geojson", roads);
     pois.add(new Cluster(roads, "encamp", "Encamp", new PVector(910, 120), "canillo", 300));
     pois.add(new Cluster(roads, "canillo", "Canillo", new PVector(950, 50), null, 300));
     pois.add(new Cluster(roads, "lamassana", "La Massana", new PVector(500, 30), "ordino", 300));
     pois.add(new Cluster(roads, "ordino", "Ordino", new PVector(600, 50), null, 300));
     pois.add(new Cluster(roads, "stjulia", "Sant Julià de Lòria", new PVector(100, 820), null, 300));
     
-    agents = new Agents(this);
+    agents = new Agents();
     agents.loadJSON("json/agents.json", roads);
     agents.setSpeed(0.1, 5);
     
@@ -103,7 +102,7 @@ void draw() {
     //image(canvas, 0, 0);
     surface.draw(canvas);
     
-    fill(0);
+    fill(#888888); noStroke(); textSize(10); textAlign(LEFT,BOTTOM);
     text(frameRate, 20, 20);
 }
 

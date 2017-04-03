@@ -105,16 +105,15 @@ public class Heatmap {
     * @param objects  List of (Placeable) objects to generate heatmap
     * @param gradient  Name identifier of gradient
     */
-    public void update(String title, ArrayList objects, String gradient) {
+    public <T extends Placeable> void update(String title, ArrayList<T> items, String gradient) {
         maxValue = 0;
         this.title = title;
         if(visible) {
             PImage gradientMap = createImage(WIDTH, HEIGHT, ARGB);
             gradientMap.loadPixels();
-            for(int i = 0; i < objects.size(); i++) {
-                Placeable obj = (Placeable) objects.get(i);
-                PVector position = obj.getPosition();
-                gradientMap = addGradientPoint(gradientMap, position.x, position.y);
+            for(T item : items) {
+                PVector pos = item.getPosition();
+                gradientMap = addGradientPoint(gradientMap, pos.x, pos.y);
             }
             gradientMap.updatePixels();
             

@@ -4,14 +4,13 @@
 * @version       1.0
 * @see           Facade
 */
-public class POIs extends Facade {
+public class POIs extends Facade<POI> {
 
     /**
     * Initiate pois of interest facade and agents' Factory
     * @param parent  Sketch applet, just put this when calling constructor
     */
-    public POIs(PApplet parent) {
-        super(parent);
+    public POIs() {
         factory = new POIFactory();
     }
     
@@ -44,7 +43,6 @@ private class POIFactory extends Factory {
             
             String name      = props.isNull("NAME") ? "null" : props.getString("NAME");
             int capacity  = props.isNull("CAPACITY") ? null : props.getInt("CAPACITY");
-            boolean cluster  = props.isNull("CLUSTER") ? false : props.getInt("CLUSTER") == 1 ? true : false;
             
             JSONArray coords = poi.getJSONObject("geometry").getJSONArray("coordinates");
             PVector location = roads.toXY( coords.getFloat(1), coords.getFloat(0) );
