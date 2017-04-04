@@ -132,7 +132,7 @@ private class Node implements Placeable, Comparable<Node> {
     * @return the direction ID of the next Cluster
     */
     protected String getDirection() {
-        this.direction = direction;
+        return direction;
     }
 
 
