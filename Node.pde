@@ -126,6 +126,15 @@ private class Node implements Placeable, Comparable<Node> {
         this.direction = direction;
     }
 
+    
+    /**
+    * Get the direction of the street (to connect a Cluster to this node) 
+    * @return the direction ID of the next Cluster
+    */
+    protected String getDirection() {
+        this.direction = direction;
+    }
+
 
     /**
     * Draw the node and outbound lanes with default colors

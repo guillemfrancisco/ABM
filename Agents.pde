@@ -164,7 +164,7 @@ public abstract class Agent implements Placeable {
     * @param roads  Roadmap to place the agent
     */
     public void place(Roads roads) {
-        inNode = roads.randomNode();
+        inNode = roads.getRandom();
         pos = inNode.getPosition();
     }
     

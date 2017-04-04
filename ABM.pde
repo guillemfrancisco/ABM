@@ -42,6 +42,7 @@ void setup() {
     myFont = createFont("Montserrat-Light", 32);
     
     BG = loadImage(bgPath);
+    //BG.resize(simWidth, simHeight);
     simWidth = BG.width;
     simHeight = BG.height;
     
@@ -84,7 +85,6 @@ void draw() {
     if(showBG) canvas.image(BG, 0, 0);
     else roads.draw(canvas, 1, #E0E3E5);
     
-    //pois.draw(canvas);
     agents.draw(canvas);
     heatmap.draw(canvas, width - 135, height - 50);
     

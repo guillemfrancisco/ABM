@@ -6,9 +6,8 @@ import java.util.*;
 * @author        Marc Vilella
 * @version       2.0
 */
-public class Roads {
+public class Roads extends Facade<Node> {
 
-    private ArrayList<Node> nodes = new ArrayList();
     private PVector window;
     private PVector[] bounds;
    
@@ -18,88 +17,15 @@ public class Roads {
     * @param file  GeoJSON file containing roads description. Use OpenStreetMap (OSM) format
     */
     public Roads(String file, int x, int y, PVector[] bounds) {
-        
         window = new PVector(x, y);
         this.bounds = bounds;
         
-        print("Loading roads network... ");
-        JSONObject roadNetwork = loadJSONObject(file);
-        JSONArray lanes = roadNetwork.getJSONArray("features");
-        for(int i = 0; i < lanes.size(); i++) {
-            JSONObject lane = lanes.getJSONObject(i);
-            
-            JSONObject props = lane.getJSONObject("properties");
-            String type = props.isNull("type") ? "null" : props.getString("type");
-            String name = props.isNull("name") ? "null" : props.getString("name");
-            boolean oneWay = props.isNull("oneway") ? false : props.getInt("oneway") == 1 ? true : false;
-            String direction = props.isNull("direction") ? null : props.getString("direction");
-      
-            JSONArray points = lane.getJSONObject("geometry").getJSONArray("coordinates");
-            
-            Node prevNode = null;
-            ArrayList vertices = new ArrayList();
-            for(int j = 0; j < points.size(); j++) {
-            
-                PVector point = toXY(points.getJSONArray(j).getFloat(1), points.getJSONArray(j).getFloat(0));
-                
-                if( contains(point) ) {
-                    vertices.add(point);
-                    
-                    Node currNode = getNodeIfVertex(point);
-                    if(currNode != null) {
-                        if(j > 0 && j < points.size()-1) {
-                            if(oneWay) prevNode.connect(currNode, vertices, name);
-                            else prevNode.connectBoth(currNode, vertices, name);
-                            vertices = new ArrayList();
-                            vertices.add(point);
-                            prevNode = currNode;
-                        }
-                    } else currNode = new Node(point);
-                    
-                    if(prevNode == null) {
-                        prevNode = currNode;
-                        currNode.place(this);
-                    } else if(j == points.size()-1) {
-                        if(oneWay) prevNode.connect(currNode, vertices, name);
-                        else prevNode.connectBoth(currNode, vertices, name);
-                        currNode.place(this);
-                        if(direction != null) currNode.setDirection(direction);
-                    }
-                }
-                
-            }
-        }
-        println("LOADED");
-        
+        factory = new RoadFactory();
+        this.loadJSON(file, this);
     }
 
 
-    /**
-    * Get a node if a position matches with an already existing vertex in roadmap
-    * @param position  Position to compare with all vertices
-    * @return a new created (not placed) node if position matches with a vertex, an already existing node if position matches with it, or
-    * null if position doesn't match with any vertex
-    */
-    private Node getNodeIfVertex(PVector position) {
-        for(Node node : nodes) {
-            if( position.equals(node.getPosition()) ) return node;
-            for(Lane lane : node.outboundLanes()) {
-                if( position.equals(lane.getEnd().getPosition()) ) return lane.getEnd();
-                else if( lane.contains(position) ) {
-                    Lane laneBack = lane.findContrariwise();
-                    Node newNode = new Node(position);
-                    if(lane.divide(newNode)) {
-                        if(laneBack != null) laneBack.divide(newNode);
-                        newNode.place(this);
-                        return newNode;
-                    }
-                }
-            }
-        }
-        return null;
-    }
-
-
+    
     private void connect(Node node) {
         
         Lane closestLane = findClosestLane(node.getPosition());
@@ -115,39 +41,14 @@ public class Roads {
         add(node);
         
     }
-    
-    /*
-    private void connect(SuperPOI sPOI) {
-        for(Node n : nodes) {
-            if(n.direction != null && n.direction.equals(sPOI.ref)) {
-                sPOI.connectBoth(n, null, "Carretera");
-                sPOI.place(this);
-                break;
-            }
-        }
-    }
-    */
-    
-    public int size() {
-        return nodes.size();
-    }
 
-
+    
+    @Override
     public void add(Node node) {
-        node.setID(nodes.size());
-        nodes.add(node);
+        node.setID(items.size());
+        items.add(node);
     }
 
-
-    public ArrayList<Node> getAll() {
-        return nodes;
-    }
-
-
-    public Node randomNode() {
-        return nodes.get( (int) random(0, nodes.size() ) );
-    }
-    
 
     public PVector toXY(float lat, float lon) {
         return new PVector(
@@ -168,7 +69,7 @@ public class Roads {
     
     
     public void draw(PGraphics canvas, int stroke, color c) {
-        for(Node node : nodes) node.draw(canvas, stroke, c);
+        for(Node node : items) node.draw(canvas, stroke, c);
     }
     
     
@@ -181,7 +82,7 @@ public class Roads {
     public Lane findClosestLane(PVector position) {
         Float minDistance = Float.NaN;
         Lane closestLane = null;
-        for(Node node : nodes) {
+        for(Node node : items) {
             for(Lane lane : node.outboundLanes()) {
                 PVector linePoint = lane.findClosestPoint(position);
                 float distance = position.dist(linePoint);
@@ -196,7 +97,93 @@ public class Roads {
 
     
     public void select(int mouseX, int mouseY) {
-        for(Node node : nodes) node.select(mouseX, mouseY);
+        for(Node node : items) node.select(mouseX, mouseY);
     }
     
+}
+
+
+
+public class RoadFactory extends Factory {
+    
+    public ArrayList<Node> loadJSON(File file, Roads roads) {
+        
+        print("Loading roads network... ");
+        JSONObject roadNetwork = loadJSONObject(file);
+        JSONArray lanes = roadNetwork.getJSONArray("features");
+        for(int i = 0; i < lanes.size(); i++) {
+            JSONObject lane = lanes.getJSONObject(i);
+            
+            JSONObject props = lane.getJSONObject("properties");
+            String type = props.isNull("type") ? "null" : props.getString("type");
+            String name = props.isNull("name") ? "null" : props.getString("name");
+            boolean oneWay = props.isNull("oneway") ? false : props.getInt("oneway") == 1 ? true : false;
+            String direction = props.isNull("direction") ? null : props.getString("direction");
+      
+            JSONArray points = lane.getJSONObject("geometry").getJSONArray("coordinates");
+            
+            Node prevNode = null;
+            ArrayList vertices = new ArrayList();
+            for(int j = 0; j < points.size(); j++) {
+            
+                PVector point = roads.toXY(points.getJSONArray(j).getFloat(1), points.getJSONArray(j).getFloat(0));
+                
+                if( roads.contains(point) ) {
+                    vertices.add(point);
+                    
+                    Node currNode = getNodeIfVertex(roads, point);
+                    if(currNode != null) {
+                        if(prevNode != null && j < points.size()-1) {
+                            if(oneWay) prevNode.connect(currNode, vertices, name);
+                            else prevNode.connectBoth(currNode, vertices, name);
+                            vertices = new ArrayList();
+                            vertices.add(point);
+                            prevNode = currNode;
+                        }
+                    } else currNode = new Node(point);
+                    
+                    if(prevNode == null) {
+                        prevNode = currNode;
+                        currNode.place(roads);
+                    } else if(j == points.size()-1) {
+                        if(oneWay) prevNode.connect(currNode, vertices, name);
+                        else prevNode.connectBoth(currNode, vertices, name);
+                        currNode.place(roads);
+                        if(direction != null) currNode.setDirection(direction);
+                    }
+                }
+                
+            }
+        }
+        println("LOADED");
+        
+        return new ArrayList();
+    }
+    
+    
+    /**
+    * Get a node if a position matches with an already existing vertex in roadmap
+    * @param position  Position to compare with all vertices
+    * @return a new created (not placed) node if position matches with a vertex, an already existing node if position matches with it, or
+    * null if position doesn't match with any vertex
+    */
+    private Node getNodeIfVertex(Roads roads, PVector position) {
+        for(Node node : roads.getAll()) {
+            if( position.equals(node.getPosition()) ) return node;
+            for(Lane lane : node.outboundLanes()) {
+                if( position.equals(lane.getEnd().getPosition()) ) return lane.getEnd();
+                else if( lane.contains(position) ) {
+                    Lane laneBack = lane.findContrariwise();
+                    Node newNode = new Node(position);
+                    if(lane.divide(newNode)) {
+                        if(laneBack != null) laneBack.divide(newNode);
+                        newNode.place(roads);
+                        return newNode;
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
 }
