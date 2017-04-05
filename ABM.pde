@@ -88,9 +88,9 @@ void draw() {
     agents.draw(canvas);
     heatmap.draw(canvas, width - 135, height - 50);
     
-    canvas.fill(showBG ? #FFFFFF : #000000);
-    canvas.textFont(myFont); canvas.textSize(10); canvas.textAlign(LEFT, TOP); canvas.textLeading(15);
-    canvas.text("Agents: " + agents.count() + "\nSpeed: " + (run ? agents.getSpeed() : "[PAUSED]") + "\nFramerate: " + round(frameRate) + "fps", 20, 20);
+    fill(#000000);
+    textFont(myFont); textSize(10); textAlign(LEFT, TOP); textLeading(15);
+    text("Agents: " + agents.count() + "\nSpeed: " + (run ? agents.getSpeed() : "[PAUSED]") + "\nFramerate: " + round(frameRate) + "fps", 20, 20);
     agents.printLegend(canvas, 20, 70);
     
     /*
@@ -101,9 +101,7 @@ void draw() {
     canvas.endDraw();
     //image(canvas, 0, 0);
     surface.draw(canvas);
-    
-    fill(#888888); noStroke(); textSize(10); textAlign(LEFT,BOTTOM);
-    text(frameRate, 20, 20);
+
 }
 
 

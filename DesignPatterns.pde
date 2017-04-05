@@ -111,8 +111,9 @@ public abstract class Facade<T extends Placeable> {
     public void printLegend(PGraphics canvas, int x, int y) {
         String txt = "";
         IntDict counter = factory.getCounter();
+        textAlign(LEFT, TOP);
         for(String name : counter.keyArray()) txt += name + ": " + counter.get(name) + "\n";
-        canvas.text(txt, x, y);
+        text(txt, x, y);
     }
     
 }
