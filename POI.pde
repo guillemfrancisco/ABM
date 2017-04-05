@@ -258,7 +258,7 @@ public class Cluster extends POI {
     public void place(Roads roads) {
         for(Node node : roads.getAll()) {
             if(node.getDirection() != null && ID.equals(node.getDirection())) {
-                node.connectBoth(this, null, "Connection to " + NAME);
+                node.connectBoth(this, null, "Connection to " + NAME, Accessible.ALL);
                 roads.add(this);
                 break;
             }

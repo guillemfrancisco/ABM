@@ -195,6 +195,3 @@ public class Heatmap {
     }  
   
 }
-
-
-public enum Visibility { HIDE, SHOW, TOGGLE; }

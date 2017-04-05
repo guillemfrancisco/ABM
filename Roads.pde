@@ -37,7 +37,7 @@ public class Roads extends Facade<Node> {
         if(closestLaneBack != null) closestLaneBack.split(connectionNode);
         add(connectionNode);
         
-        node.connectBoth(connectionNode, null, "Access");
+        node.connectBoth(connectionNode, null, "Access", Accessible.ALL);
         add(node);
         
     }
@@ -115,7 +115,7 @@ public class RoadFactory extends Factory {
             JSONObject lane = lanes.getJSONObject(i);
             
             JSONObject props = lane.getJSONObject("properties");
-            String type = props.isNull("type") ? "null" : props.getString("type");
+            Accessible access = props.isNull("type") ? Accessible.ALL : Accessible.create( props.getString("type") );
             String name = props.isNull("name") ? "null" : props.getString("name");
             boolean oneWay = props.isNull("oneway") ? false : props.getInt("oneway") == 1 ? true : false;
             String direction = props.isNull("direction") ? null : props.getString("direction");
@@ -134,8 +134,8 @@ public class RoadFactory extends Factory {
                     Node currNode = getNodeIfVertex(roads, point);
                     if(currNode != null) {
                         if(prevNode != null && j < points.size()-1) {
-                            if(oneWay) prevNode.connect(currNode, vertices, name);
-                            else prevNode.connectBoth(currNode, vertices, name);
+                            if(oneWay) prevNode.connect(currNode, vertices, name, access);
+                            else prevNode.connectBoth(currNode, vertices, name, access);
                             vertices = new ArrayList();
                             vertices.add(point);
                             prevNode = currNode;
@@ -146,8 +146,8 @@ public class RoadFactory extends Factory {
                         prevNode = currNode;
                         currNode.place(roads);
                     } else if(j == points.size()-1) {
-                        if(oneWay) prevNode.connect(currNode, vertices, name);
-                        else prevNode.connectBoth(currNode, vertices, name);
+                        if(oneWay) prevNode.connect(currNode, vertices, name, access);
+                        else prevNode.connectBoth(currNode, vertices, name, access);
                         currNode.place(roads);
                         if(direction != null) currNode.setDirection(direction);
                     }

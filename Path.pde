@@ -176,7 +176,7 @@ public class Path {
                 if( currNode.equals(destination) ) break;
                 for(Lane lane : currNode.outboundLanes()) {
                     Node neighbor = lane.getEnd();
-                    if( !lane.isOpen() || closed.contains(neighbor) ) continue;
+                    if( !lane.isOpen() || closed.contains(neighbor) || !lane.allows(AGENT)) continue;
                     boolean neighborOpen = open.contains(neighbor);
                     float costToNeighbor = currNode.getG() + lane.getLength();
                     if( costToNeighbor < neighbor.getG() || !neighborOpen ) {

@@ -8,6 +8,7 @@
 private class Lane {
     
     private String name;
+    private Accessible access;
     
     private Node finalNode;
     private float distance;
@@ -26,8 +27,9 @@ private class Lane {
     * @param finalNode  Node where the lane ends
     * @param vertices  List of vertices that give shape to lane
     */
-    public Lane(String name, Node initNode, Node finalNode, ArrayList<PVector> vertices) {
+    public Lane(String name, Accessible access, Node initNode, Node finalNode, ArrayList<PVector> vertices) {
         this.name = name;
+        this.access = access;
         this.finalNode = finalNode;
         if(vertices != null && vertices.size() != 0) this.vertices = new ArrayList(vertices);
         else {
@@ -95,6 +97,11 @@ private class Lane {
         return open;
     }
 
+
+    public boolean allows(Agent agent) {
+        return access.allows(agent);
+    }
+    
     
     /**
     * Check if lane contains a specific vertex
@@ -182,7 +189,7 @@ private class Lane {
         int i = vertices.indexOf(node.getPosition());
         if(i > 0 && i < vertices.size()-1) {
             ArrayList<PVector> dividedVertices = new ArrayList( vertices.subList(i, vertices.size()) );
-            node.connect(finalNode, dividedVertices, name);
+            node.connect(finalNode, dividedVertices, name, access);
             vertices = new ArrayList( vertices.subList(0, i+1) );
             finalNode = node;
             distance = calcLength();
@@ -205,7 +212,7 @@ private class Lane {
                 ArrayList<PVector> splittedVertices = new ArrayList();
                 splittedVertices.add(node.getPosition());
                 splittedVertices.addAll( vertices.subList(i, vertices.size()) );
-                node.connect(finalNode, splittedVertices, name);
+                node.connect(finalNode, splittedVertices, name, access);
                 
                 vertices = new ArrayList( vertices.subList(0, i) );
                 vertices.add(node.getPosition());
@@ -225,7 +232,8 @@ private class Lane {
     * @param c  Lane color
     */
     public void draw(PGraphics canvas, int stroke, color c) {
-        color occupColor = lerpColor(c, #FF0000, occupancy);    // Lane occupancy color interpolation
+        //color occupColor = lerpColor(c, #FF0000, occupancy);    // Lane occupancy color interpolation
+        color occupColor = access == Accessible.ALL ? #0000FF : access == Accessible.WALK ? #00FF00 : #FF0000;
         canvas.stroke(occupColor, 127); canvas.strokeWeight(stroke);
         for(int i = 1; i < vertices.size(); i++) {
             PVector prevVertex = vertices.get(i-1);

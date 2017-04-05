@@ -100,8 +100,8 @@ private class Node implements Placeable, Comparable<Node> {
     * @param vertices  List of vertices that shape the lane
     * @param name  Name of the lane
     */
-    protected void connect(Node node, ArrayList<PVector> vertices, String name) {
-        lanes.add( new Lane(name, this, node, vertices) );
+    protected void connect(Node node, ArrayList<PVector> vertices, String name, Accessible access) {
+        lanes.add( new Lane(name, access, this, node, vertices) );
     }
     
     
@@ -111,10 +111,10 @@ private class Node implements Placeable, Comparable<Node> {
     * @param vertices  List of vertices that shape the lanes
     * @param name  Name of the lanes
     */
-    protected void connectBoth(Node node, ArrayList<PVector> vertices, String name) {
-        connect(node, vertices, name);
+    protected void connectBoth(Node node, ArrayList<PVector> vertices, String name, Accessible access) {
+        connect(node, vertices, name, access);
         if(vertices != null) Collections.reverse(vertices);
-        node.connect(this, vertices, name);
+        node.connect(this, vertices, name, access);
     }
 
     
