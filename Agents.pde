@@ -164,7 +164,9 @@ public abstract class Agent implements Placeable {
     * @param roads  Roadmap to place the agent
     */
     public void place(Roads roads) {
-        inNode = roads.getRandom();
+        //inNode = roads.getRandom();
+        ArrayList<Node> possible = roads.filter(Filters.isAllowed(this));
+        inNode = possible.get( round(random(0, possible.size()-1)) );
         pos = inNode.getPosition();
     }
     
@@ -195,8 +197,9 @@ public abstract class Agent implements Placeable {
         path.reset();
         arrived = false;
         POI newDestination = null;
+        ArrayList<POI> possible = pois.filter(Filters.isAllowed(this));
         while(newDestination == null || inNode.equals(newDestination)) {
-            newDestination = (POI) pois.getRandom();    // Random POI for the moment
+            newDestination = possible.get( round(random(0, possible.size()-1)) );    // Random POI for the moment
         }
         return newDestination;
     }
@@ -330,6 +333,7 @@ private class Person extends Agent {
             PVector destPos = destination.getPosition();
             canvas.stroke(#FF0000, 100); canvas.strokeWeight(1);
             canvas.line(pos.x, pos.y, destPos.x, destPos.y);
+            canvas.text(destination.NAME, pos.x, pos.y);
         }
         
         canvas.fill(COLOR); canvas.noStroke();
@@ -391,6 +395,7 @@ private class Vehicle extends Agent {
             path.draw(canvas, 1, COLOR);
             canvas.fill(COLOR, 130); canvas.noStroke();
             canvas.ellipse(pos.x, pos.y, 4 * SIZE, 4 * SIZE);
+            canvas.text(destination.NAME, pos.x, pos.y);
         }
         
         canvas.noFill(); canvas.stroke(COLOR); canvas.strokeWeight(1);

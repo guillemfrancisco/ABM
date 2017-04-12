@@ -25,9 +25,13 @@ public enum Accessible {
     
     public static Accessible create(String name) {
         switch(name) {
+            // Road types
             case "primary": case "secondary": case "residential": case "service": return ALL;
-            case "pedestrian": case "living_street": case "footway": case "steps": return WALK;
+            case "pedestrian": case "living_street": case "footway": case "steps": case "cycleway": return WALK;
             case "tunnel": return DRIVE;
+            // POI types
+            case "hotel": case "restaurant": case "bar": case "museum": return WALK;
+            case "parking": return DRIVE;
         }
         return ALL;
     }

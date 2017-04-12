@@ -82,7 +82,7 @@ private class Node implements Placeable, Comparable<Node> {
     public Lane shortestLaneTo(Node node) {
         Float shortestLaneLength = Float.NaN;
         Lane shortestLane = null;
-        for(Lane lane : outboundLanes()) {
+        for(Lane lane : lanes) {
             if(node.equals(lane.getEnd())) {
                 if(shortestLaneLength.isNaN() || lane.getLength() < shortestLaneLength) {
                     shortestLaneLength = lane.getLength();
@@ -133,6 +133,14 @@ private class Node implements Placeable, Comparable<Node> {
     */
     protected String getDirection() {
         return direction;
+    }
+    
+    
+    public boolean allows(Agent agent) {
+        for(Lane lane : lanes) {
+            if(lane.allows(agent)) return true;
+        }
+        return false;
     }
 
 

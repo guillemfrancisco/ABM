@@ -232,8 +232,7 @@ private class Lane {
     * @param c  Lane color
     */
     public void draw(PGraphics canvas, int stroke, color c) {
-        //color occupColor = lerpColor(c, #FF0000, occupancy);    // Lane occupancy color interpolation
-        color occupColor = access == Accessible.ALL ? #0000FF : access == Accessible.WALK ? #00FF00 : #FF0000;
+        color occupColor = lerpColor(c, #FF0000, occupancy);    // Lane occupancy color interpolation
         canvas.stroke(occupColor, 127); canvas.strokeWeight(stroke);
         for(int i = 1; i < vertices.size(); i++) {
             PVector prevVertex = vertices.get(i-1);

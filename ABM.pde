@@ -6,14 +6,13 @@ POIs pois;
 Heatmap heatmap;
 boolean run = false;
 
-//PGraphics canvas;
 PImage BG;
 boolean showBG = true;
 
 // PROJECTION 3D MODEL
 WarpSurface surface;
-Canvas canvas;
-//PGraphics canvas;
+//Canvas canvas;
+PGraphics canvas;
 
 // SIMULACIÓ FONS DE VALL
 int simWidth = 1000;
@@ -42,24 +41,26 @@ void setup() {
     myFont = createFont("Montserrat-Light", 32);
     
     BG = loadImage(bgPath);
-    //BG.resize(simWidth, simHeight);
-    simWidth = BG.width;
-    simHeight = BG.height;
+    BG.resize(simWidth, simHeight);
+    //simWidth = BG.width;
+    //simHeight = BG.height;
     
     surface = new WarpSurface(this, 900, 300, 10, 5);
     surface.loadConfig();
-    canvas = new Canvas(this, simWidth, simHeight, bounds, roi);
-    //canvas = createGraphics(simWidth, simHeight);
+    //canvas = new Canvas(this, simWidth, simHeight, bounds, roi);
+    canvas = createGraphics(simWidth, simHeight);
     
     roads = new Roads(roadsPath, simWidth, simHeight, bounds);
     
     pois = new POIs();
-    pois.loadJSON("json/restaurants.geojson", roads);
     pois.add(new Cluster(roads, "encamp", "Encamp", new PVector(910, 120), "canillo", 300));
     pois.add(new Cluster(roads, "canillo", "Canillo", new PVector(950, 50), null, 300));
     pois.add(new Cluster(roads, "lamassana", "La Massana", new PVector(500, 30), "ordino", 300));
     pois.add(new Cluster(roads, "ordino", "Ordino", new PVector(600, 50), null, 300));
     pois.add(new Cluster(roads, "stjulia", "Sant Julià de Lòria", new PVector(100, 820), null, 300));
+    //pois.loadJSON("json/pois.geojson", roads);
+    pois.loadCSV("restaurants.csv", roads);
+    pois.loadCSV("parkings.csv", roads);
     
     agents = new Agents();
     agents.loadJSON("json/agents.json", roads);
@@ -88,19 +89,19 @@ void draw() {
     agents.draw(canvas);
     heatmap.draw(canvas, width - 135, height - 50);
     
+    canvas.endDraw();
+    image(canvas, 0, 0);
+    //surface.draw(canvas);
+
     fill(#000000);
     textFont(myFont); textSize(10); textAlign(LEFT, TOP); textLeading(15);
     text("Agents: " + agents.count() + "\nSpeed: " + (run ? agents.getSpeed() : "[PAUSED]") + "\nFramerate: " + round(frameRate) + "fps", 20, 20);
     agents.printLegend(canvas, 20, 70);
-    
+
     /*
     fill(0);
     text("Agents moving: " + agents.count(Filters.isMoving(false)), 20, 200);
     */
-
-    canvas.endDraw();
-    //image(canvas, 0, 0);
-    surface.draw(canvas);
 
 }
 

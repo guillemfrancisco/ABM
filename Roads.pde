@@ -26,19 +26,19 @@ public class Roads extends Facade<Node> {
 
 
     
-    private void connect(Node node) {
+    private void connect(POI poi) {
         
-        Lane closestLane = findClosestLane(node.getPosition());
+        Lane closestLane = findClosestLane(poi.getPosition());
         Lane closestLaneBack = closestLane.findContrariwise();
-        PVector closestPoint = closestLane.findClosestPoint(node.getPosition());
+        PVector closestPoint = closestLane.findClosestPoint(poi.getPosition());
         
         Node connectionNode = new Node(closestPoint);
         closestLane.split(connectionNode);
         if(closestLaneBack != null) closestLaneBack.split(connectionNode);
         add(connectionNode);
         
-        node.connectBoth(connectionNode, null, "Access", Accessible.ALL);
-        add(node);
+        poi.connectBoth(connectionNode, null, "Access", poi.access);
+        add(poi);
         
     }
 

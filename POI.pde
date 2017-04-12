@@ -14,6 +14,13 @@ public class POIs extends Facade<POI> {
         factory = new POIFactory();
     }
     
+    
+    public void loadCSV(String path, Roads roadmap) {
+        File file = new File( dataPath(path) );
+        if( !file.exists() ) println("ERROR! CSV file does not exist");
+        else items.addAll( ((POIFactory)factory).loadCSV(path, roadmap) );
+    }
+    
 }
 
 
@@ -41,15 +48,16 @@ private class POIFactory extends Factory {
             
             JSONObject props = poi.getJSONObject("properties");
             
-            String name      = props.isNull("NAME") ? "null" : props.getString("NAME");
-            int capacity  = props.isNull("CAPACITY") ? null : props.getInt("CAPACITY");
+            String name    = props.isNull("NAME") ? "null" : props.getString("NAME");
+            String type    = props.isNull("TYPE") ? "null" : props.getString("TYPE");
+            int capacity   = props.isNull("CAPACITY") ? 0 : props.getInt("CAPACITY");
             
             JSONArray coords = poi.getJSONObject("geometry").getJSONArray("coordinates");
             PVector location = roads.toXY( coords.getFloat(1), coords.getFloat(0) );
                 
             if( roads.contains(location) ) {
-                pois.add( new POI(roads, str(count), name, location, capacity) );
-                counter.increment("restaurant");
+                pois.add( new POI(roads, str(count), name, type, location, capacity) );
+                counter.increment(type);
                 count++;
             }
              
@@ -68,16 +76,17 @@ private class POIFactory extends Factory {
         ArrayList<POI> pois = new ArrayList();
         int count = count();
         
-        Table table = loadTable(path, "header, tsv");
+        Table table = loadTable(path, "header");
         for(TableRow row : table.rows()) {
             
             String name         = row.getString("NAME");
-            PVector location    = roads.toXY(row.getFloat("LAT"), row.getFloat("LNG"));
+            PVector location    = roads.toXY(row.getFloat("Y"), row.getFloat("X"));
             int capacity        = row.getInt("CAPACITY");
+            String type         = row.getString("TYPE");
             int size            = 3;
             
             if( roads.contains(location) ) {
-                pois.add( new POI(roads, str(count), name, location, capacity) );
+                pois.add( new POI(roads, str(count), name, type, location, capacity) );
                 counter.increment(path); 
                 count++;
             }
@@ -100,6 +109,7 @@ public class POI extends Node {
     protected final String ID;
     protected final String NAME;
     protected final int CAPACITY;
+    protected final Accessible access;
     
     protected ArrayList<Agent> crowd = new ArrayList();
     protected float occupancy;
@@ -115,11 +125,12 @@ public class POI extends Node {
     * @param name       Name of the POI
     * @param capacity   Customers capacity of the POI
     */
-    public POI(Roads roads, String id, String name, PVector position, int capacity) {
+    public POI(Roads roads, String id, String name, String type, PVector position, int capacity) {
         super(position);
         ID = id;
         NAME = name;
         CAPACITY = capacity;
+        access = Accessible.create(type);
         
         place(roads);
     }
@@ -144,13 +155,19 @@ public class POI extends Node {
     }
     
     
+    @Override
+    public boolean allows(Agent agent) {
+        return access.allows(agent);
+    }
+    
+    
     /**
     * Add agent to the hosted list as long as POI's crowd is under its maximum capacity, meaning agent is staying in POI
     * @param agent  Agent to host
     * @return true if agent is hosted, false otherwise
     */
     public boolean host(Agent agent) {
-        if(crowd.size() < CAPACITY) {
+        if(this.allows(agent) && crowd.size() < CAPACITY) {
             crowd.add(agent);
             update();
             return true;
@@ -245,7 +262,7 @@ public class Cluster extends POI {
     * @param capacity  Customers capacity of the Cluster
     */
     public Cluster(Roads roads, String id, String name, PVector position, String direction, int capacity) {
-        super(roads, id, name, position, capacity);
+        super(roads, id, name, "cluster", position, capacity);
         setDirection(direction);
     }
     

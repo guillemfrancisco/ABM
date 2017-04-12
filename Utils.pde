@@ -55,8 +55,8 @@ public static class Filters {
     */
     public static Predicate<Agent> closeToPoint(final PVector point, final int distance) {
         return new Predicate<Agent>() {
-            public boolean evaluate(Agent item) {
-                return point.dist(item.getPosition()) < distance;
+            public boolean evaluate(Agent agent) {
+                return point.dist(agent.getPosition()) < distance;
             }
         };
     }
@@ -71,6 +71,15 @@ public static class Filters {
         return new Predicate<Agent>() {
             public boolean evaluate(Agent agent) {
                 return agent.isMoving() == moving;
+            }
+        };
+    }
+    
+    
+    public static <T extends Node> Predicate isAllowed(final Agent agent) {
+        return new Predicate<T>() {
+            public boolean evaluate(T item) {
+                return item.allows(agent);
             }
         };
     }
