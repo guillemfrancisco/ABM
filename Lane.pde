@@ -10,6 +10,7 @@ private class Lane {
     private String name;
     private Accessible access;
     
+    private Node initNode;
     private Node finalNode;
     private float distance;
     private ArrayList<PVector> vertices = new ArrayList();
@@ -30,6 +31,7 @@ private class Lane {
     public Lane(String name, Accessible access, Node initNode, Node finalNode, ArrayList<PVector> vertices) {
         this.name = name;
         this.access = access;
+        this.initNode = initNode;
         this.finalNode = finalNode;
         if(vertices != null && vertices.size() != 0) this.vertices = new ArrayList(vertices);
         else {
@@ -205,7 +207,9 @@ private class Lane {
     * @param node New node to split lane by
     * @return true if lane was succesfully splited, false otherwise
     */
-    protected boolean split(Node node) {
+    protected Node split(Node node) {
+        if( node.getPosition().equals(vertices.get(0)) ) return initNode;
+        else if( node.getPosition().equals(finalNode.getPosition()) ) return finalNode;
         for(int i = 1; i < vertices.size(); i++) {
             if( Geometry.inLine(node.getPosition(), vertices.get(i-1), vertices.get(i)) ) {
                 
@@ -218,10 +222,10 @@ private class Lane {
                 vertices.add(node.getPosition());
                 finalNode = node;
                 distance = calcLength();
-                return true;
+                return node;
             }
         }
-        return false;
+        return null;
     }
     
     

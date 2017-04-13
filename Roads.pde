@@ -33,9 +33,9 @@ public class Roads extends Facade<Node> {
         PVector closestPoint = closestLane.findClosestPoint(poi.getPosition());
         
         Node connectionNode = new Node(closestPoint);
-        closestLane.split(connectionNode);
-        if(closestLaneBack != null) closestLaneBack.split(connectionNode);
-        add(connectionNode);
+        connectionNode = closestLane.split(connectionNode);
+        if(closestLaneBack != null) connectionNode = closestLaneBack.split(connectionNode);
+        this.add(connectionNode);
         
         poi.connectBoth(connectionNode, null, "Access", poi.access);
         add(poi);
@@ -45,8 +45,10 @@ public class Roads extends Facade<Node> {
     
     @Override
     public void add(Node node) {
-        node.setID(items.size());
-        items.add(node);
+        if(node.getID() == -1) {
+            node.setID(items.size());
+            items.add(node);
+        }
     }
 
 
