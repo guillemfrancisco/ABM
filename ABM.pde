@@ -8,6 +8,7 @@ boolean run = false;
 
 PImage BG;
 boolean showBG = true;
+boolean surfaceMode = false;
 
 // PROJECTION 3D MODEL
 WarpSurface surface;
@@ -41,14 +42,18 @@ void setup() {
     myFont = createFont("Montserrat-Light", 32);
     
     BG = loadImage(bgPath);
-    BG.resize(simWidth, simHeight);
-    //simWidth = BG.width;
-    //simHeight = BG.height;
-    
-    surface = new WarpSurface(this, 900, 300, 10, 5);
-    surface.loadConfig();
-    //canvas = new Canvas(this, simWidth, simHeight, bounds, roi);
-    canvas = createGraphics(simWidth, simHeight);
+    if(surfaceMode) {
+        simWidth = BG.width;
+        simHeight = BG.height;
+        
+        surface = new WarpSurface(this, 900, 300, 10, 5);
+        surface.loadConfig();
+        canvas = new Canvas(this, simWidth, simHeight, bounds, roi);
+        
+    } else {
+        BG.resize(simWidth, simHeight);
+        canvas = createGraphics(simWidth, simHeight);
+    }
     
     roads = new Roads(roadsPath, simWidth, simHeight, bounds);
     
@@ -90,8 +95,9 @@ void draw() {
     heatmap.draw(canvas, width - 135, height - 50);
     
     canvas.endDraw();
-    image(canvas, 0, 0);
-    //surface.draw(canvas);
+    
+    if(surfaceMode) surface.draw((Canvas)canvas);
+    else image(canvas, 0, 0);
 
     fill(#000000);
     textFont(myFont); textSize(10); textAlign(LEFT, TOP); textLeading(15);
