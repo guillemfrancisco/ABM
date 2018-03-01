@@ -87,9 +87,10 @@ public abstract class Facade<T extends Placeable> {
     * @param roads  Roadmap where objects will be added
     */
     public void loadJSON(String path, Roads roadmap) {
-        File file = new File( dataPath(path) );
-        if( !file.exists() ) println("ERROR! JSON file does not exist");
-        else items.addAll( factory.loadJSON(file, roadmap) );
+        String url = new String(path);
+        //File file = new File( dataPath(path) );
+        //if( !path.exists() ) println("ERROR! JSON file does not exist");
+        items.addAll( factory.loadJSON(url, roadmap) );
     }
 
     
@@ -156,6 +157,6 @@ public abstract class Factory<T> {
     * @param roads  Roadmap where objects will be added
     * @return list with new created objects 
     */
-    public abstract ArrayList<T> loadJSON(File file, Roads roads);
+    public abstract ArrayList<T> loadJSON(String url, Roads roads);
     
 }

@@ -36,25 +36,27 @@ private class POIFactory extends Factory {
     /**
     * Load POIs form JSON file
     */
-    public ArrayList<POI> loadJSON(File JSONFile, Roads roads) {
+    public ArrayList<POI> loadJSON(String url, Roads roads) {
         
         print("Loading POIs... ");
         ArrayList<POI> pois = new ArrayList();
         int count = count();
         
-        JSONArray JSONPois = loadJSONObject(JSONFile).getJSONArray("features");
+        JSONArray JSONPois = loadJSONObject(url).getJSONArray("features");
         for(int i = 0; i < JSONPois.size(); i++) {
             JSONObject poi = JSONPois.getJSONObject(i);
             
             JSONObject props = poi.getJSONObject("properties");
             
-            String name    = props.isNull("NAME") ? "null" : props.getString("NAME");
-            String type    = props.isNull("TYPE") ? "null" : props.getString("TYPE");
-            int capacity   = props.isNull("CAPACITY") ? 0 : props.getInt("CAPACITY");
+            String name    = props.isNull("name") ? "null" : props.getString("name");
+            String type    = props.isNull("amenity") ? "null" : props.getString("amenity");
+            //int capacity   = props.isNull("capacity") ? 5 : props.getInt("capacity");
+            int capacity = 20;
+            int size = 3;
             
             JSONArray coords = poi.getJSONObject("geometry").getJSONArray("coordinates");
             PVector location = roads.toXY( coords.getFloat(1), coords.getFloat(0) );
-                
+                            
             if( roads.contains(location) ) {
                 pois.add( new POI(roads, str(count), name, type, location, capacity) );
                 counter.increment(type);
@@ -84,6 +86,7 @@ private class POIFactory extends Factory {
             int capacity        = row.getInt("CAPACITY");
             String type         = row.getString("TYPE");
             int size            = 3;
+            
             
             if( roads.contains(location) ) {
                 pois.add( new POI(roads, str(count), name, type, location, capacity) );

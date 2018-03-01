@@ -16,12 +16,12 @@ public class Roads extends Facade<Node> {
     * Initiate roadmap from a GeoJSON file
     * @param file  GeoJSON file containing roads description. Use OpenStreetMap (OSM) format
     */
-    public Roads(String file, int x, int y, PVector[] bounds) {
+    public Roads(String url, int x, int y, PVector[] bounds) {
         window = new PVector(x, y);
         this.bounds = bounds;
         
         factory = new RoadFactory();
-        this.loadJSON(file, this);
+        this.loadJSON(url, this);
     }
 
 
@@ -108,16 +108,16 @@ public class Roads extends Facade<Node> {
 
 public class RoadFactory extends Factory {
     
-    public ArrayList<Node> loadJSON(File file, Roads roads) {
+    public ArrayList<Node> loadJSON(String url, Roads roads) {
         
         print("Loading roads network... ");
-        JSONObject roadNetwork = loadJSONObject(file);
+        JSONObject roadNetwork = loadJSONObject(url);
         JSONArray lanes = roadNetwork.getJSONArray("features");
         for(int i = 0; i < lanes.size(); i++) {
             JSONObject lane = lanes.getJSONObject(i);
             
             JSONObject props = lane.getJSONObject("properties");
-            Accessible access = props.isNull("type") ? Accessible.ALL : Accessible.create( props.getString("type") );
+            Accessible access = props.isNull("highway") ? Accessible.ALL : Accessible.create( props.getString("highway") );
             String name = props.isNull("name") ? "null" : props.getString("name");
             boolean oneWay = props.isNull("oneway") ? false : props.getInt("oneway") == 1 ? true : false;
             String direction = props.isNull("direction") ? null : props.getString("direction");

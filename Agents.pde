@@ -74,13 +74,13 @@ private class AgentFactory extends Factory {
     /**
     * Create agents from JSON file
     */
-    public ArrayList<Agent> loadJSON(File file, Roads roads) {
+    public ArrayList<Agent> loadJSON(String url, Roads roads) {
 
         print("Loading agents... ");
         ArrayList<Agent> agents = new ArrayList();
         int count = count();
         
-        JSONArray JSONagents = loadJSONObject(file).getJSONArray("agents");
+        JSONArray JSONagents = loadJSONObject(url).getJSONArray("agents");
         for(int i = 0; i < JSONagents.size(); i++) {
             JSONObject agentGroup = JSONagents.getJSONObject(i);
             
